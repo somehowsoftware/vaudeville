@@ -1,0 +1,26 @@
+You've been spawned to work {{ premise_id }}: {{ summary }}
+
+**Where you work:** you are in a fresh git worktree created for this Premise — your shell's current working directory. Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, so you may reflexively `cd` into that clone as if it were "the repository"; do not. Stay in this worktree; never edit or commit in the main clone.
+
+## The Premise
+
+{{ description }}
+
+{{ discussion -}}
+## What to do
+
+This is a `plan`-route Premise. The deliverable lives in the tracker — not in code, not in a separate spec doc. It is a set of child Premises that decompose this work into pieces that can each be materialized, together with the Depend edges between them. Files in `docs/spec/` in the consuming repo describe what *is*; the design of work that hasn't shipped yet does not belong there.
+
+1. Claim: `vv premise-claim {{ premise_id }}`.
+2. Read the surrounding context so you understand what the larger work actually is — the code, the doctrine, any open Premises that touch the same area, anything David has already said about it. Plan-route Premises are exactly where the original author's framing is most likely to be incomplete, because scoping is the work the author was deferring.
+3. Form the design. Decide what is being materialized, what shape it takes, what the boundary with adjacent work is. Iterate with David in chat as the shape settles; the conversation is the work for a `plan`-route Premise, not a side effect of it.
+4. Once the design has shape, decide what child Premises need to exist to materialize it. For each, draft a summary in the humble-snapshot shape, pick a Route, and identify any Depend edges between them.
+5. Surface the proposed plan to David: the child Premises and the dep structure. Wait for his blessing before mutating the tracker.
+6. On his approval, execute. Author each child with `vv file --summary ... --description ... --route ...`. Wire the Depend edges as the structure requires.
+7. Close this Premise with `/closeout delivered`; the synopsis comment should name the child Premise ids and the dependency graph among them.
+
+There is typically no PR for a `plan`-route Premise; the tracker mutations are the intended artefact.
+
+**IMPORTANT:** The local `~/vaudeville-*` clones are almost always out of date. You must never, ever depend on them (or the local `.vaudeville`) for up-to-date cross-repo context. When cross-repo context is required, you must make a network request to GitHub and look at the latest origin/main.
+
+**Format:** any response with more than one prose paragraph uses bold-dot numbering (`**1.**`, `**2.**`, …) per the voice doctrine.

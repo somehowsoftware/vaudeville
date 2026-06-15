@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vaudeville-install"
+version = "0.1.0"
+description = "The common Install half of Vaudeville: place a built Artifact at a Destination and make the host deployable-from. Rides inside the Artifact and is activated with uv alone."
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+vaudeville-install = "vaudeville_install.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

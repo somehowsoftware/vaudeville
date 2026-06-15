@@ -1,0 +1,30 @@
+@startuml auto-bump-fan-out
+
+' Release-time event flow that propagates a new vaudeville-core wheel
+' across every Contributor's lockfile without manual intervention.
+
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam defaultFontName sans-serif
+
+skinparam sequence {
+  ParticipantBackgroundColor #e8f4f8
+  ParticipantBorderColor     #4a90a4
+  ActorBackgroundColor       #faf3e0
+  ActorBorderColor           #b08a3a
+  LifeLineBackgroundColor    #f8fbfd
+  LifeLineBorderColor        #4a90a4
+}
+
+title vaudeville-core — Auto-bump fan-out
+
+actor Maintainer as M
+
+participant "vaudeville-core CI" as core
+participant "Contributor CI\n(N in parallel)"  as ct
+
+M -> core : push v*X.Y.Z
+core -> ct : dispatch core-version-bump\nafter publish succeeds
+ct -> ct : refresh lock,\nauto-merge PR,\nrebase other open PRs
+
+@enduml

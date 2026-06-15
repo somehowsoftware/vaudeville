@@ -1,0 +1,8 @@
+jinja2>=3.1
+typer>=0.12
+vaudeville-core>=2026.06.12.1
+
+[dev]
+pytest>=7.0
+mypy>=1.20
+ruff>=0.4

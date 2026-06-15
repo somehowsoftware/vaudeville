@@ -1,0 +1,3 @@
+[console_scripts]
+vaudeville-bob = vaudeville_bobiverse.operator_cli:main
+vv-bob = vaudeville_bobiverse.cli:main

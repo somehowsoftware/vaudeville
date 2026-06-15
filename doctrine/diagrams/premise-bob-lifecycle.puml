@@ -1,0 +1,43 @@
+@startuml premise-bob-lifecycle
+
+' The lifecycle of a Premise-based Bob, from authoring through to
+' termination. Domain-level: stages are named in framework vocabulary,
+' edges in skill verbs. Substrate details (worktrees, panes, launcher
+' files) and tracker mechanics (custom fields, link types) are out of
+' scope. Closed states are terminal except Returned, which re-enters the
+' pickup pool, and Delivered, which may fan out via /onward.
+
+title Premise-based Bob lifecycle
+
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam defaultFontName sans-serif
+
+state "Authored\n(in pickup pool)"      as authored
+state "Spawned\n(substrate allocated)"  as spawned
+state "Claimed\n(claim complete)"       as claimed
+state "Working"                         as working
+state "Materialized\n(parlay watching)" as materialized
+state "Delivered"                       as delivered <<terminal>>
+state "Returned"                        as returned  <<terminal>>
+state "Abandoned"                       as abandoned <<terminal>>
+state "Onward fanout"                   as onward
+
+[*]          --> authored     : ""/file"" or ""/delegate""
+authored     --> spawned      : ""/spawn""\n(or ""/delegate"")
+spawned      --> claimed      : ""vv premise-claim""\n(first-turn body)
+claimed      --> working      : Bob begins\nthe Route's work
+working      --> materialized : ""/materialize""
+materialized --> delivered    : ""/closeout delivered""\n(PR merged)
+working      --> returned     : ""/closeout returned""\n(stopped partway)
+working      --> abandoned    : ""/closeout abandoned""\n(Premise obsolete)
+claimed      --> abandoned    : ""/closeout abandoned""\n(without entering Working)
+delivered    --> onward       : ""/onward"" fanout\n(optional)
+
+returned     --> authored     : re-enters pool
+onward       --> spawned      : downstream Premise picked up
+
+abandoned    --> [*]
+delivered    --> [*]
+
+@enduml

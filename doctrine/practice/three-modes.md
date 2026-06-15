@@ -1,0 +1,11 @@
+# Three modes of intervention
+
+Work coordinated through Vaudeville falls into three modes; each has a proper home.
+
+**Deterministic processes belong in code.** If the steps can be specified exhaustively — claim a [Premise](../vocabulary.md#premise), transition its state fields, post a synopsis comment — the process should be a tool call; the `vv` CLI is the canonical home. Performing one by hand wastes agent intelligence on rote work; an agent that improvises a deterministic process produces a worse outcome than the tool would have.
+
+**Bounded judgment belongs in bounded conversation.** A task requiring judgment within bounded scope gets a conversation with bounded shape. The Premise is the unit; the Route names the lifecycle the conversation expects, and the bounded-judgment Routes — check-in, plan, direct — each have a clear beginning, middle, and end. Skills give such conversations structure without reducing them to deterministic code: scaffolding that gives a procedure a shape, which the agent's judgment fills in. A skill is often a waypoint toward rote delegation; parts of what it exhorts become `vv` tool calls as their deterministic shape becomes clear.
+
+**Unbounded judgment belongs in unbounded conversation.** When a problem is weird, cross-cutting, and interdependent in ways no fixed-deliverable lifecycle can anticipate, the right tool is an open-ended human-AI conversation, with ad hoc work products arising as it progresses. These conversations are first-class work, not scaffold failures to be engineered away. The *manual* Route is the Premise shape for them: the Bob reads the framing and follows the conversation wherever it goes, with no `/materialize` step and no check-in to land. A manual Premise is no less a Premise than a check-in one; the difference is the lifecycle the conversation expects. Do not try to outscaffold the model on its native terrain.
+
+Recognize which mode a given piece of work belongs in. The two most common mistakes: pushing a deterministic process into a bounded conversation when it should be a tool call, and pushing an unbounded-judgment problem into a check-in lifecycle when it wants the manual one (compresses dialectic into a one-shot exchange).

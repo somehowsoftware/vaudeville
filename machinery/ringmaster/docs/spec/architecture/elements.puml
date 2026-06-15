@@ -1,0 +1,37 @@
+' Shared element definitions for Ringmaster architecture diagrams.
+'
+' These are the PlantUML projection of the Ringmaster Ubiquitous
+' Language documented in ../ul.md. Element identity is defined here
+' in one place so a future diagram (or a future ingest layer) reads
+' each term from a single canonical location.
+'
+' This file is a fragment (no @startuml/@enduml). Including it inside
+' another diagram's @startuml block is the only supported use.
+
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam defaultFontName sans-serif
+
+skinparam rectangle {
+  BackgroundColor<<input>>     #f0f0f0
+  BorderColor<<input>>         #888888
+  BackgroundColor<<artifact>>  #e8f4f8
+  BorderColor<<artifact>>      #4a90a4
+  BackgroundColor<<phase>>     #d0e6f0
+  BorderColor<<phase>>         #2a6a85
+  BackgroundColor<<output>>    #faf3e0
+  BorderColor<<output>>        #b08a3a
+  BackgroundColor<<external>>  #f0f0f0
+  BorderColor<<external>>      #888888
+}
+
+rectangle "Registry"                   as registry <<input>>
+rectangle "Contributor Repo\n(0..n)"   as repo     <<input>>
+rectangle "Session Clone\n(0..n)"      as clone    <<artifact>>
+rectangle "Worktree"                   as worktree <<input>>
+rectangle "Artifact"                   as artifact <<artifact>>
+rectangle "Host Scaffold"              as host     <<output>>
+rectangle "Staged Scaffold"            as staged   <<output>>
+rectangle "git"                        as git      <<external>>
+rectangle "uv tool"                    as uv       <<external>>
+rectangle "claude"                     as claude   <<external>>

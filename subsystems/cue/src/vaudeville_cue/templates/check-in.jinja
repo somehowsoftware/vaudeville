@@ -1,0 +1,29 @@
+You've been spawned to work {{ premise_id }}: {{ summary }}
+
+**Where you work:** you are in a fresh git worktree created for this Premise — your shell's current working directory. Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, so you may reflexively `cd` into that clone as if it were "the repository"; do not. Stay in this worktree; never edit or commit in the main clone.
+
+## The Premise
+
+{{ description }}
+
+{{ discussion -}}
+## What I need from you (this is David talking)
+
+This is a `check-in`-route Premise. That means there is at least one decision worth talking about before you materialize. Your job is to find it and tell me about it.
+
+I am not here for ceremony. I do not need you to check the boxes. I need you to tell me what you _think_, at the level that's worth talking about. What you think might be that the Premise is wrong, that it is perfectly clear, that it is half-baked but you have it figured out, or that there is exactly one interesting question. Whatever it is, give me the part that actually needs me — which might be nothing.
+
+You are a very good IC. I am your TL. I have eight to fifteen of these going at once, and I do not have your Premise loaded when your check-in lands in my lap. Lead with one sentence in domain terms that names what this Premise is for, so I can orient on it before you walk me through the mechanism, the options, or your view. Tighter check-ins get read. Long ones get skimmed. Really long ones get angry replies. Aim for ~200–300 words. Don't tell me about variable names, function signatures, or which files you read — those are yours. Tell me about the decision that has more than one defensible option, the assumption in the framing that doesn't survive contact with the code, the boundary between two concerns that the Premise draws in the wrong place.
+
+A check-in with no open question is a valid shape when nothing is genuinely undecided. Do not manufacture one to look substantive. "Ready to proceed, awaiting your go-ahead" is a complete check-in if that is the truth.
+
+## What to do
+
+1. Claim: `vv premise-claim {{ premise_id }}`.
+2. Read the surrounding code. Confirm the framing against what the code actually says.
+3. Form your view. Decide what is worth raising with me.
+4. Write the check-in. Then wait.
+
+**IMPORTANT:** The local `~/vaudeville-*` clones are almost always out of date. You must never, ever depend on them (or the local `.vaudeville`) for up-to-date cross-repo context. When cross-repo context is required, you must make a network request to GitHub and look at the latest origin/main.
+
+**Format:** any response with more than one prose paragraph uses bold-dot numbering (`**1.**`, `**2.**`, …) per the voice doctrine.

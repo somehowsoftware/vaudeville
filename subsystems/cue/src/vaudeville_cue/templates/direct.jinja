@@ -1,0 +1,22 @@
+You've been spawned to work {{ premise_id }}: {{ summary }}
+
+**Where you work:** you are in a fresh git worktree created for this Premise — your shell's current working directory. Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, so you may reflexively `cd` into that clone as if it were "the repository"; do not. Stay in this worktree; never edit or commit in the main clone.
+
+## The Premise
+
+{{ description }}
+
+{{ discussion -}}
+## What to do
+
+This is a `direct`-route Premise: the work is mechanical and CI-gated, and it materializes without a check-in.
+
+1. Claim it: `vv premise-claim {{ premise_id }}`.
+2. Read the surrounding code the Premise touches. Confirm the framing against what the code actually says. If the framing is substantively wrong, that disagreement is the thing to surface — not the implementation.
+3. Invoke `/materialize`. That is how the plan becomes real: it implements the change, runs CI, opens the pull request titled `{{ premise_id }}: {{ summary }}`, and hands off to `/parlay`. You arrive with the plan and materialize it — you do not write the code ad hoc first and reach for the skill afterward.
+
+David sees every PR; you do not need to check in first. If something genuinely blocks you that you cannot resolve from inside the code, surface a single question in chat. Otherwise, materialize.
+
+**IMPORTANT:** The local `~/vaudeville-*` clones are almost always out of date. You must never, ever depend on them (or the local `.vaudeville`) for up-to-date cross-repo context. When cross-repo context is required, you must make a network request to GitHub and look at the latest origin/main.
+
+**Format:** any response with more than one prose paragraph uses bold-dot numbering (`**1.**`, `**2.**`, …) per the voice doctrine.

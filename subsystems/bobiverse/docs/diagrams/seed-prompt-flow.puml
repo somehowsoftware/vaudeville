@@ -1,0 +1,48 @@
+@startuml seed-prompt-flow
+
+' The contract boundary between vaudeville-bobiverse and vaudeville-cue
+' at Bob spawn. Bobiverse owns the Launcher (the file written to disk
+' and handed to workmux); vaudeville-cue owns the seed prompt's content.
+' The configured downstream — [spawn.downstream] command in
+' vaudeville.toml, default `vv premise-context` in CUE — is the seam at
+' which the two contexts meet.
+
+title Seed-prompt contract — bobiverse / vaudeville-cue boundary
+
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam defaultFontName sans-serif
+
+skinparam package {
+  BackgroundColor #f4f4f4
+  BorderColor #888888
+}
+
+skinparam rectangle {
+  BackgroundColor<<bobiverse>>  #d0e6f0
+  BorderColor<<bobiverse>>      #2a6a85
+  BackgroundColor<<cue>>        #e6dff0
+  BorderColor<<cue>>            #6a4a85
+  BackgroundColor<<artifact>>   #faf3e0
+  BorderColor<<artifact>>       #b08a3a
+  BackgroundColor<<external>>   #f0f0f0
+  BorderColor<<external>>       #888888
+}
+
+package "vaudeville-bobiverse" {
+  rectangle "/spawn"                      as spawn      <<bobiverse>>
+  rectangle "Launcher\n.scratch/launcher-<id>.md" as launcher <<artifact>>
+}
+
+package "vaudeville-cue" {
+  rectangle "vv premise-context\n([spawn.downstream] default)" as downstream <<cue>>
+}
+
+rectangle "workmux" as workmux <<external>>
+
+spawn      -> downstream : invoke (exec)
+downstream -> spawn      : stdout = prompt body
+spawn      -> launcher   : write
+launcher   -> workmux    : ""workmux add""\n--prompt-file
+
+@enduml
