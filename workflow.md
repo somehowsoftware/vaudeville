@@ -93,7 +93,7 @@ flowchart TD
     Q3 -->|no| MANUAL
 ```
 
-The **[Route](doctrine/vocabulary.md#route)** is the triage decision that determines the lifecycle's shape. It is set when a Premise is filed and governs everything downstream: what kind of conversation the work expects, what the deliverable looks like, where the operator's attention is needed.
+The **[Route](doctrine/vocabulary.md#route)** is the coordination-level classification that determines the lifecycle's shape. It is set when a Premise is filed — before the working session exists — and governs everything downstream: what kind of conversation the work expects, what the deliverable looks like, where the operator's attention is needed. It has a session-level counterpart the operator never sets: once a Bob is working, *how* it realizes the work in hand is its own classification, called Procedure, chosen inside the session rather than fixed at filing. [Concepts](./concepts.md) draws out that parallel; here the concern stays on the Route, the part the operator acts on.
 
 **direct** — the work is mechanical and CI-gated, with no bounded decision points worth surfacing. The Bob materializes without a check-in. Most dependency updates, scaffolding PRs, and well-specified refactors are direct.
 

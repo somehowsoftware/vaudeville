@@ -1,41 +1,49 @@
 # Vaudeville
 
-Vaudeville was the variety form in which a parade of ephemeral acts — a juggler, a singer, a comedian, each gone the moment it stepped offstage — shared one stage under a single coherent show. That is the shape of this framework. A Bob is an ephemeral act: a fresh [Claude Code](https://www.anthropic.com/product/claude-code) session spawned into its own worktree, handed one Premise, run until the work lands, then gone. The operator is the show-runner, keeping a variety of independent acts coherent under a single direction. Vaudeville is the methodology and the tooling for running that show: a discipline for building software with frontier AI agents when the hard part is not writing the code but holding a coherent picture of a system under constant change — and keeping every contributor's actions, human and machine, aligned with that picture.
+Vaudeville is a tool for developing software slowly. Its method is called *dialectical engineering*. Its doctrine cites [Hegel](https://en.wikipedia.org/wiki/Dialectic#Hegelian_dialectic), [the Talmud](https://en.wikipedia.org/wiki/Chavrusa#Practice), and [crew resource management](https://en.wikipedia.org/wiki/Crew_resource_management#Emphasis_on_non-technical_skills). Its name comes from a [dead theatrical form](https://en.wikipedia.org/wiki/Vaudeville). When you say it out loud, it sounds stupid; it reliably earns skepticism, eye-rolls, and occasionally outright pity. These are all reasonable reactions.
 
-## Why you might care
+The point is to build software that neither a human nor an agent could build alone. Most useful software is not that. Most of the time, Vaudeville is the wrong tool for the job. It's the right tool when you want to [build a to-do app](./the-point.md#velocity-reach-depth) with the level of rigor usually reserved for spacecraft guidance systems.
 
-A weak model fails obviously. A strong model fails plausibly. The failure that matters in serious agentic work is not bad code — coding agents stopped writing obviously bad code a while ago. It is plausible code that quietly changes the meaning of the system: a predicate becomes a filter, a user-facing metaphor becomes a domain primitive, the test suite validates examples while the algebra underneath them dies. Every local move looks reasonable; the system is now wrong globally, and it keeps working right up until it has to compose. When frontier models make local work cheap, global coherence becomes the bottleneck, and the characteristic product of an undisciplined agentic process is elaborate wrongness — a large amount of competent-looking work organized around a slightly corrupted premise. Vaudeville is one attempt at machinery for that bottleneck. Most harnesses are built to get more force out of the agent; this one is built so the workpiece — the conceptual structure of the system — is not marred while force is applied.
+Uncharitably, Vaudeville is for glorious over-engineering. [Donald Knuth spent twelve years inventing TeX](https://en.wikipedia.org/wiki/TeX#History). If you ever looked at that and thought, "I wish that were me," this could be a nice tool for you.
 
-## Why you probably don't need it
+## The enemy
 
-Honesty first: there are basically three things you can try to get out of agentic coding — velocity, reach, and depth. Velocity means building what you already understand, very fast. Reach means building what you do not personally know how to build but somebody does, the agent carrying you across the gap. Nearly every tool in this space is aimed at one of those two, for the sound commercial reason that nearly all software needs nothing else — and the mainstream tools serve them genuinely well. If that is your work, use those tools; this framework would be ceremony in your way, and ceremony is exactly what it exists to refuse.
+The enemy is plausible code that quietly changes what the system means. A predicate becomes a filter. A filter becomes a state transition. A user-interface metaphor becomes a domain primitive. Every diff reads as reasonable, and the system ends up wrong in a way that only surfaces when the parts have to compose.
 
-Depth is the third thing, and it is almost never the goal. Depth means building systems whose parts are individually intelligible but whose total coordination burden exceeds what one mind can hold in stable relation — software that does not fit in a brain, but fits in a context window if the context can be kept focused enough. Most people writing software with agents do not have this problem and need none of this. Vaudeville is for when you do.
+## You probably don't need this
 
-## Where this is coming from
+Most useful new software is similar to one or another class of useful existing software. That's great, because it means that agents can pick up the thread and run with it. Vaudeville is 4WD low: you'll go slower on every road but the one that would have stopped you. If you are building software that can be understood as "the same kind of thing as X, but retargeted at/optimized for/designed around Y", this is not the droid you're looking for.
 
-What drove me to the framework was a specific project I kept getting stuck on: a task engine whose predicate algebra is a lossless superset of both [OmniFocus](https://www.omnigroup.com/omnifocus/)'s and [TaskWarrior](https://taskwarrior.org/)'s semantics, over a two-level dependency graph, with [Lamport-clock](https://en.wikipedia.org/wiki/Lamport_timestamp)-based sync. That is five-dimensional chess. It simply doesn't fit in my brain — but it fits in a context window, if it can be kept focused enough. That admission is not modesty; it is the design premise. Historically the frontier of software sophistication was bounded by how well you could coordinate the very brightest engineers, and that coordination is not economical outside large research operations. Frontier models change the cost structure — serious engineering capability now comes out of the box. What does not come out of the box is stability.
+Vaudeville is built for systems where:
+1. each part is individually intelligible, and yet
+2. the total coordination burden exceeds what one mind can hold in stable relation long enough to build them. 
 
-The framework was forged partly in anxiety. Every few months a new model ships above the old frontier, and the chorus arrives on schedule: surely scaffolds like this one are about to become superfluous. Examined closely, the anxiety inverts — capability growth moves value from compensation scaffolds to governance scaffolds, and a stronger model raises the stakes on exactly the questions this framework exists to force. The other recurring greeting was pity: friends who heard "agents, worktrees, skills, tests" and concluded *you and everyone else*. The answer that stuck is an analogy: [Knipex](https://www.knipex.com/) makes a pliers, [Harbor Freight](https://www.harborfreight.com/) makes a pliers; they are not the same tool, and the difference is not the parts list but what happens to the workpiece under load.
+If you are staring at such a problem, this framework stops being philosophy and starts being the most practical tool available.
 
-Underneath both answers sits a wager that is genuinely personal: that wielding AI is weaponized philosophy. The practices here were dragged in from fields that rarely get within shouting distance of a build pipeline — [Hegel](https://en.wikipedia.org/wiki/Georg_Wilhelm_Friedrich_Hegel), [talmudic disputation](https://en.wikipedia.org/wiki/Chavrusa), [epistemology](https://en.wikipedia.org/wiki/Epistemology), [organizational studies](https://en.wikipedia.org/wiki/Organization_studies), [human factors engineering](https://en.wikipedia.org/wiki/Human_factors_and_ergonomics), comedy — and made to pay rent in machinery. And at the center is a method rather than a tool: nobody at the table has the answers, almost by definition. I bring taste, stakes, and suspicion; the agent brings stamina, breadth, and the patience to grind through implications; the two of us enable one another to make things neither could make alone. I call that dialectical engineering, and Vaudeville is one instantiation of it.
+## You probably won't like this
 
-## How this canon is organized
+The framework is opinionated in directions that are largely abandoned because they are usually overkill. Two key points on this:
 
-This directory is the human side of the Vaudeville doctrine — the part written to be read by a person, at leisure, for understanding rather than for action. It is where the *why* lives and the convictions are allowed to breathe. The operative doctrine — the version every agent primes against before it does any work — lives in [`doctrine/`](doctrine/). That tree is terse on purpose: an agent re-reads it on every turn, so every word there is paid thousands of times over, and it has been compressed to carry only what an agent needs in order to reason. The two trees are not the same doctrine twice; they carry different things for their different readers — essays and onboarding here, operative doctrine there. What they share is one vocabulary: the framework's terms are defined once, in [`doctrine/vocabulary.md`](doctrine/vocabulary.md), as the single source of truth both trees draw on. Where the prose here and a definition there ever pull apart, the vocabulary governs and this side is corrected to match.
+- **It is XP and domain-driven design taken at full strength:** tests written before the code and named as contracts, a ubiquitous language that is enforced rather than encouraged, bounded contexts with real borders, docstrings banned, comments nearly banned, acceptance criteria banned outright.
+
+- **It manufactures friction on purpose.** The unit of work is not a ticket, but a _premise_. The agent is under standing instruction to oppose you. If what you want is an amiable executor of instructions, this will be a miserable fit. The friction is the product: the argument is where the work gets done that neither party could have done alone.
 
 ## The code here is reorganized for reading
 
-The tree in this repository is not the source as it is developed. What is rendered here is a curated reading copy of them, gathered into `subsystems/`, `machinery/`, and `doctrine/` so the whole constellation can be browsed in one place. It is organized for legibility, not for building. The authoritative record of what a release actually shipped is [`provenance.toml`](provenance.toml) at the root, which pins the exact commit of every contributor and the integrator version that assembled them. [The prototype](./the-prototype.md) is the full tour — what the pieces are and how they are assembled — and the one place this canon rips the curtain on Vaudeville's own internals.
+The tree in this repository is not the source as it is developed: it has been reorganized for legibility. This mechanism also lets me write my drafts unobserved. Keeping the [Managed Repositories](./doctrine/vocabulary.md#managed-repository) private allows me to celebrate, despair, curse, kvetch, berate, and laugh at my own jokes in private. 
 
-Why aren't the original repos public? Because I don't want to work in front of an audience. I want to celebrate, despair, curse, kvetch, berate, and laugh at my own jokes in private. Most importantly, I need the psychological safety to be _wrong_, _confused_, and _ignorant_. The finished product is here.
+Dialectical engineering is [designed to surface misconceptions](./the-point.md). The process depends on you being _wrong_, _confused_, and _ignorant_. Doing that in front of an audience changes the character of that work.
 
-## Contents
+## Getting started
 
-- [The point](./the-point.md) — what Vaudeville is for: depth, the control problem, targeted friction as an engine for insight, and why all of it grows more valuable as models grow stronger. Start here.
-- [Prerequisites](./prerequisites.md) — whether to use it at all: the terrain that justifies the framework, the opinions it presumes in its operator, and the shape a repository has to be in before the machinery can grip it.
-- [Concepts](./concepts.md) — the vocabulary built up as exposition: what a Bob, a Premise, a Route, a Foundation, a bounded context are, and how the terms connect into one system you can hold in your head. The glossary made continuous.
-- [Workflow](./workflow.md) — the operational picture: the arc a piece of work travels from a filed Premise to a landed change, the four Route shapes in practice, the check-in, the merge, the closeout, and how it all composes across a day.
-- [Weaponized philosophy](./weaponized-philosophy.md) — where the practices come from: the traditions far from software engineering that the framework compiles into machinery, and the rent each one pays.
-- [Vocabulary](doctrine/vocabulary.md) — the framework's terms, defined once as the single source of truth and shared with the operative tree: what each term means, and why it is shaped the way it is. The reference the [concepts](./concepts.md) guide builds its exposition on.
-- [The prototype](./the-prototype.md) — a walkthrough of how Vaudeville-the-tool is used to build new versions of Vaudeville-the-development project.
+### Key resources
+- [Prerequisites](./prerequisites.md): whether you should use Vaudeville at all.
+- [Concepts](./concepts.md): the vocabulary built up as exposition.
+- [Walkthrough](walkthrough.md): a tour of how Vaudeville is built using Vaudeville.
+- [Workflow](./workflow.md): the day-to-day process of working in Vaudeville.
+- [Installation](./installation.md): the mechanics of starting your Vaudeville project.
+
+### Additional reading
+- [The point](./the-point.md): optimistically, an essay on what Vaudeville is for. Pessimistically, a screed.
+- [Weaponized philosophy](./weaponized-philosophy.md): where the practices come from.
+- [Glossary](doctrine/vocabulary.md): the reference version of [Concepts](./concepts.md).
