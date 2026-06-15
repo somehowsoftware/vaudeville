@@ -1,4 +1,4 @@
-# Vaudeville
+# Vaudeville: a tool for the opposite of vibe coding
 
 Vaudeville is a tool for developing software slowly. Its method is called *dialectical engineering*. Its doctrine cites [Hegel](https://en.wikipedia.org/wiki/Dialectic#Hegelian_dialectic), [the Talmud](https://en.wikipedia.org/wiki/Chavrusa#Practice), and [crew resource management](https://en.wikipedia.org/wiki/Crew_resource_management#Emphasis_on_non-technical_skills). Its name comes from a [dead theatrical form](https://en.wikipedia.org/wiki/Vaudeville). When you say it out loud, it sounds stupid; it reliably earns skepticism, eye-rolls, and occasionally outright pity. These are all reasonable reactions.
 
