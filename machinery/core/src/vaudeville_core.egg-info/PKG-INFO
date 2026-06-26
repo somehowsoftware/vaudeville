@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: vaudeville-core
-Version: 2026.6.12.1
-Summary: Core engine extracted from the vaudeville project.
+Version: 2026.6.26.1
+Summary: Anti-corruption layer over Vaudeville's foreign systems: the project tracker, git hosting, and the host config.
 Requires-Python: >=3.14
 Requires-Dist: pydantic>=2
 Provides-Extra: dev

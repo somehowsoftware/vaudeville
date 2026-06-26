@@ -16,7 +16,7 @@ skinparam sequence {
   LifeLineBorderColor        #4a90a4
 }
 
-title vaudeville-core — Auto-bump fan-out
+title vaudeville-core: Auto-bump fan-out
 
 actor Maintainer as M
 

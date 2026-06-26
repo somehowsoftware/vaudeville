@@ -1,26 +1,28 @@
-You've been spawned to work {{ premise_id }}: {{ summary }}
+You've been spawned to work {{ assignment_id }}: {{ summary }}
 
-**Where you work:** you are in a fresh git worktree created for this Premise — your shell's current working directory. Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, so you may reflexively `cd` into that clone as if it were "the repository"; do not. Stay in this worktree; never edit or commit in the main clone.
+**Where you work:** you are in a fresh git worktree created for this Premise (your shell's current working directory). Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, but you do not work there: never `cd` into it, and never edit or commit in it.
 
 ## The Premise
 
 {{ description }}
 
 {{ discussion -}}
+{{ dependencies -}}
 ## What to do
 
-This is a `plan`-route Premise. The deliverable lives in the tracker — not in code, not in a separate spec doc. It is a set of child Premises that decompose this work into pieces that can each be materialized, together with the Depend edges between them. Files in `docs/spec/` in the consuming repo describe what *is*; the design of work that hasn't shipped yet does not belong there.
+This is a `plan`-route Premise. The deliverable lives in the tracker, not in code, not in a separate spec doc. It is a set of child Assignments that decompose this work into pieces that can each be realized, together with the Depend edges between them. Files in `docs/spec/` in the consuming repo describe what *is*; the design of work that hasn't shipped yet does not belong there.
 
-1. Claim: `vv premise-claim {{ premise_id }}`.
-2. Read the surrounding context so you understand what the larger work actually is — the code, the doctrine, any open Premises that touch the same area, anything David has already said about it. Plan-route Premises are exactly where the original author's framing is most likely to be incomplete, because scoping is the work the author was deferring.
-3. Form the design. Decide what is being materialized, what shape it takes, what the boundary with adjacent work is. Iterate with David in chat as the shape settles; the conversation is the work for a `plan`-route Premise, not a side effect of it.
-4. Once the design has shape, decide what child Premises need to exist to materialize it. For each, draft a summary in the humble-snapshot shape, pick a Route, and identify any Depend edges between them.
-5. Surface the proposed plan to David: the child Premises and the dep structure. Wait for his blessing before mutating the tracker.
-6. On his approval, execute. Author each child with `vv file --summary ... --description ... --route ...`. Wire the Depend edges as the structure requires.
-7. Close this Premise with `/closeout delivered`; the synopsis comment should name the child Premise ids and the dependency graph among them.
+A plan route is a conversation before it is a decomposition. Scoping is the work the author deferred, so the shape of the children is settled with the operator, in chat, while it is still forming, not read out of the code and handed over finished. Bring the operator the framing early, while it can still be pressed on; a finished design on turn one is the one outcome this route exists to prevent.
+
+1. Claim: `vv assignment-claim {{ assignment_id }}`.
+2. Read enough to orient: the code, the doctrine, any open Assignments that touch the same area, anything the operator has already said. Plan routes are exactly where the original author's framing is most likely incomplete, because scoping is what the author was deferring, so read to find what the framing got wrong, not to settle the design. Reading the code fixes your technical picture, but it can't recover what the operator meant the scope to be; that lives with them.
+3. Open the scope with the operator before going further, and for this turn be the operator reading it, not the agent who did the work: you are running ten to twenty assignments like this one at once, each competing for your zero-sum attention, and you have seconds for this one before the next is waiting. Open by naming what this work is: the goal it decomposes, in the domain's own words as if to someone who has never seen it, before any finding. A scoping question lands on no one who does not yet hold what work it is scoping. Then draft the rest as what you would want handed to you, and read it back from that seat and cut every line that would not change how you steer the scope, every line there only to show you the work got done. Keep what you cannot act without: the corrected framing, the scoping questions the author left open, and your hot take on the shape the decomposition might take. Don't form the full design or reach for `/decompose` until the shape is agreed between you. Then wait.
+4. Once the shape is agreed, form the design from what the conversation settled: what each child realizes, the boundary with adjacent work, and the Depend edges among them.
+5. Run `/decompose`. It cuts the design into the child Assignments that realize it: pressure-testing each candidate against the Bob who would pick it up, surfacing the proposed set and its dependency graph for the operator's blessing, and authoring the children in dependency order once they approve.
+6. Close this Premise with `/closeout delivered`; the synopsis comment should name the child Assignment ids and the dependency graph among them.
 
 There is typically no PR for a `plan`-route Premise; the tracker mutations are the intended artefact.
 
-**IMPORTANT:** The local `~/vaudeville-*` clones are almost always out of date. You must never, ever depend on them (or the local `.vaudeville`) for up-to-date cross-repo context. When cross-repo context is required, you must make a network request to GitHub and look at the latest origin/main.
+**IMPORTANT:** Cross-repo facts live at `origin/main` on GitHub, never in the local `~/vaudeville-*` clones or `.vaudeville`; those are stale.
 
 **Format:** any response with more than one prose paragraph uses bold-dot numbering (`**1.**`, `**2.**`, …) per the voice doctrine.

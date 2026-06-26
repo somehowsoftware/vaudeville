@@ -5,7 +5,7 @@
 #
 # Designed to be launched DETACHED (setsid + nohup + &) from the agent
 # whose own tmux pane this script will kill. Once the pane dies the
-# agent dies too, so this script must outlive both — that is what the
+# agent dies too, so this script must outlive both; that is what the
 # detachment buys us. Every `/closeout <disposition>` delegates here
 # through `vv teardown`, regardless of disposition.
 #
@@ -23,7 +23,7 @@ set -euo pipefail
 INVOCATION_PWD="$PWD"
 
 # Resolve the worktree name BEFORE we cd anywhere. When no argument is
-# given, derive it from the git toplevel of the invoker's PWD — not from
+# given, derive it from the git toplevel of the invoker's PWD, not from
 # PWD itself, so launching from any subdirectory of the worktree still
 # resolves to the worktree's root.
 if [[ -n "${1:-}" ]]; then
@@ -39,7 +39,7 @@ fi
 
 # Resolve the main worktree (shared git dir's parent) BEFORE we cd anywhere.
 # Both `workmux path` and `workmux remove` need a git repo cwd to enumerate
-# worktrees — running from `/` fails with "not a git repository". The main
+# worktrees; running from `/` fails with "not a git repository". The main
 # worktree survives removal of this one, so it's a safe cwd for teardown.
 MAIN_REPO="$(dirname "$(git -C "$INVOCATION_PWD" rev-parse --path-format=absolute --git-common-dir)")"
 
@@ -59,12 +59,12 @@ fi
 # must stay identical to claude_projects.project_directory in Python (the spawn
 # seed and prime store use that one); a path with a space or punctuation that
 # the two encoded differently would archive from the wrong directory here. A
-# missing transcript dir aborts before teardown unless the caller opts out — the
-# encoding is load-bearing, so silent data loss on an encoding change would
+# missing transcript dir aborts before teardown unless the caller opts out; the
+# encoding is essential, so silent data loss on an encoding change would
 # be worse than one loud failure on this node.
 #
 # Claude Code keeps its sessions under $CLAUDE_CONFIG_DIR (default ~/.claude),
-# so the transcript root must follow that variable too — a rehearse Session
+# so the transcript root must follow that variable too; a rehearse Session
 # points CLAUDE_CONFIG_DIR at the Staged Scaffold, and hardcoding ~/.claude
 # would look for the transcript on the host scaffold and abort teardown.
 CLAUDE_PROJECTS_ROOT="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"
@@ -99,7 +99,7 @@ rsync -a \
   "$WT_PATH/" "$DEST/"
 
 if [[ "$TRANSCRIPT_PRESENT" == "1" ]]; then
-  # Dot-prefixed name reserves the path for archive metadata: a project
+  # Dot-prefixed name reserves the path for archive metadata: a Component
   # whose worktree already contains a top-level `transcripts/` directory
   # would otherwise be silently merged with Claude's session files.
   log "Archiving transcripts $TRANSCRIPT_DIR -> $DEST/.claude-transcripts/"

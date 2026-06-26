@@ -1,38 +1,4 @@
 #!/usr/bin/env python3
-"""PreToolUse hook: refuse pane-destroying teardown unless David authorised it.
-
-Two surfaces reach the same destructive action — archiving the worktree and
-`workmux remove --force`, which ends the Bob whose pane runs it:
-
-- The **front door**: the `/closeout` and `/onward` skills, invoked through the
-  Skill tool. A spawning agent that paraphrases verbs like "obsolete the
-  premise", "close it out", or "saturate the graph" into one of these
-  invocations destroys a live conversation without authorisation.
-- The **back door**: a raw `vv teardown` (or `vv-bob teardown`) run through the
-  Bash tool. `vv teardown` archives and removes the *current* worktree and kills
-  its pane, so a Bob that reaches for it believing it to be a harmless
-  housekeeping command self-closes by mistake. That self-closeout is what this
-  guard's Bash branch exists to prevent. The transition atoms `/closeout` chains
-  before it (`vv resolve`, `vv return`, `vv unclaim`) only touch the tracker and
-  are not guarded here; teardown is the irreversible step.
-
-Both surfaces are gated by the same consent signal: David's most recent typed
-message must contain a literal `/closeout` or `/onward` outside of backticks.
-Backtick-stripping matters because David discusses these skills in chat by name
-(inline code spans); those references denote the skill, not an invocation, so
-only an unbackticked literal counts as consent. The front-door skills both call
-`vv teardown` themselves, so a typed `/closeout` or `/onward` authorises the
-underlying verb too — the legitimate teardown path passes cleanly.
-
-The Bash detection is deliberately recall-biased: it matches `vv teardown`
-anywhere in a (possibly compound) command, accepting false positives (the string
-sitting in a heredoc or a grep) because a false positive costs a re-word while a
-false negative is the self-closeout recurring. It does *not* chase evasion — a
-`vv teardown` buried inside a bash script or a base64 blob escapes, and the
-constellation depends on session-restore for that case. Per the trust posture,
-the modal failure is an honest mistake, not an adversary.
-"""
-
 from __future__ import annotations
 
 import json
@@ -42,10 +8,14 @@ from pathlib import Path
 
 PROTECTED_SKILLS = frozenset({"closeout", "onward"})
 
-# `vv teardown` / `vv-bob teardown` as a command word, anywhere in the command
-# string. `\b` on the left so an absolute-path invocation (`/usr/bin/vv
-# teardown`) still matches; `\s+` tolerates extra spacing; `teardown\b` so other
-# `vv` subcommands do not trip the guard.
+# `vv teardown` / `vv-bob teardown` as a command word, anywhere in a (possibly
+# compound) command string. `\b` on the left so an absolute-path invocation
+# (`/usr/bin/vv teardown`) still matches; `\s+` tolerates extra spacing; `teardown\b`
+# so other `vv` subcommands do not trip the guard. Deliberately recall-biased: it
+# accepts false positives (the string sitting in a heredoc or a grep; a re-word
+# costs little) to avoid the false negative that is the self-closeout recurring. It
+# does not chase evasion (a `vv teardown` buried in a script or base64 blob escapes);
+# per the trust posture, the modal failure is an honest mistake, not an adversary.
 _VV_TEARDOWN_RE = re.compile(r"\bvv(?:-bob)?\s+teardown\b")
 
 
@@ -59,20 +29,20 @@ def _skill_refusal(skill: str) -> str:
 
 
 _TEARDOWN_REFUSAL = (
-    "vv teardown tears down THIS worktree — it archives the working tree and runs "
+    "vv teardown tears down THIS worktree: it archives the working tree and runs "
     "`workmux remove --force`, ending the current Bob. It is not housekeeping and "
     "not a tracker operation. David's most recent typed message contains no "
     "literal `/closeout` or `/onward` outside of backticks, so this teardown is "
     "unauthorised. To end this Bob, ask David to type `/closeout` himself. If you "
-    "meant to transition a Premise's state without ending this session, the "
-    "verb you want is `vv resolve`, `vv return`, or `vv unclaim` — teardown is "
+    "meant to transition an Assignment's state without ending this session, the "
+    "verb you want is `vv resolve`, `vv return`, or `vv unclaim`; teardown is "
     "the wrong one; surface that to David."
 )
 
 
 # CommonMark code spans use a run of N backticks as opener and the same run
 # length as closer; runs of any other length inside the span are literal. One
-# generalised pattern subsumes both inline spans and fenced blocks — the opener
+# generalised pattern subsumes both inline spans and fenced blocks: the opener
 # length is captured and matched verbatim by the closer.
 _CODE_RE = re.compile(r"(`+).*?\1", re.DOTALL)
 
@@ -82,11 +52,6 @@ def _strip_code(text: str) -> str:
 
 
 def _last_typed_text(transcript_path: Path) -> str:
-    """Most recent user-typed message body in the transcript, or "".
-
-    Skips tool results, harness-injected meta entries (skill bodies),
-    and task-notification origins.
-    """
     if not transcript_path.exists():
         return ""
     last = ""
@@ -119,10 +84,11 @@ def _last_typed_text(transcript_path: Path) -> str:
 
 
 def _typed_consent_text(transcript_path: Path) -> str:
-    """David's most recent typed message, code spans stripped.
-
-    The text in which a protected slash-literal counts as authorisation.
-    """
+    # Both guards gate on the same signal: David's most recent typed message must
+    # carry a literal `/closeout` or `/onward` outside backticks. David discusses
+    # these skills by name in inline code spans, so a backticked reference denotes the
+    # skill, not an invocation; strip code spans first, and only an unbackticked
+    # literal then counts as consent.
     return _strip_code(_last_typed_text(transcript_path))
 
 
@@ -137,6 +103,10 @@ def _guard_skill(tool_input: dict[str, object], transcript_path: Path) -> int:
 
 
 def _guard_teardown_command(tool_input: dict[str, object], transcript_path: Path) -> int:
+    # `vv teardown` archives this worktree and runs `workmux remove --force`, ending
+    # the current Bob; a Bob reaching for it as housekeeping self-closes by mistake.
+    # The transition atoms `/closeout` chains before it (vv resolve/return/unclaim)
+    # only touch the tracker, so they go unguarded; teardown is the irreversible step.
     command = tool_input.get("command")
     if not isinstance(command, str) or not _VV_TEARDOWN_RE.search(command):
         return 0

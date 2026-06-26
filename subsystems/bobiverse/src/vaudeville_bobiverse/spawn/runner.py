@@ -1,9 +1,3 @@
-"""Run the configured /spawn downstream as a subprocess.
-
-The downstream contract surface:
-    <command> <premise-id>
-"""
-
 from __future__ import annotations
 
 import subprocess
@@ -12,8 +6,8 @@ import sys
 COMMAND_NOT_FOUND_EXIT = 127
 
 
-def downstream_args(premise_id: str) -> list[str]:
-    return [premise_id]
+def downstream_args(assignment_id: str) -> list[str]:
+    return [assignment_id]
 
 
 def run_downstream(argv: list[str]) -> str:
@@ -22,7 +16,7 @@ def run_downstream(argv: list[str]) -> str:
     except FileNotFoundError:
         print(
             f"Error: downstream command {argv[0]!r} not found on PATH. "
-            f"Check [spawn.downstream] command in ~/.vaudeville/vaudeville.toml — "
+            f"Check [spawn.downstream] command in ~/.vaudeville/vaudeville.toml; "
             f"the binary may be missing or misnamed.",
             file=sys.stderr,
         )

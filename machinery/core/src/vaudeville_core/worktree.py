@@ -1,8 +1,8 @@
-"""Resolving the current project from the git working tree.
+"""Resolving the current Component from the git working tree.
 
 The git boundary: it asks git for the repository root of a working
-directory — a main clone or a linked worktree — and looks that root up in
-the project register read from the host config.
+directory (a main clone or a linked worktree) and looks that root up in
+the Component register read from the host config.
 """
 
 from __future__ import annotations
@@ -10,13 +10,13 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from vaudeville_core.component import component_for_repo_root
 from vaudeville_core.config_file import (
     VAUDEVILLE_FILENAME,
     _abort,
     host_config_path,
     load_config,
 )
-from vaudeville_core.project import project_for_repo_root
 
 
 def main_repo_root(cwd: Path) -> Path:
@@ -41,19 +41,19 @@ def main_repo_root(cwd: Path) -> Path:
     return git_common.parent.resolve()
 
 
-def project_from_cwd(cwd: Path | None = None, *, host_config_dir: Path | None = None) -> str:
+def component_from_cwd(cwd: Path | None = None, *, host_config_dir: Path | None = None) -> str:
     cwd = (cwd or Path.cwd()).resolve()
     repo_root = main_repo_root(cwd)
     config = load_config(host_config_dir)
-    project = project_for_repo_root(config, repo_root)
-    if project is None:
+    component = component_for_repo_root(config, repo_root)
+    if component is None:
         known = ", ".join(
             f"{candidate.prefix}={candidate.repo_path}"
-            for candidate in sorted(config.projects.values(), key=lambda p: p.prefix)
+            for candidate in sorted(config.components.values(), key=lambda c: c.prefix)
         )
         register = host_config_path(VAUDEVILLE_FILENAME, host_config_dir)
         _abort(
             f"repo at {repo_root} is not registered in "
             f"{register}. Known mappings: {known or '(none)'}."
         )
-    return project.prefix
+    return component.prefix

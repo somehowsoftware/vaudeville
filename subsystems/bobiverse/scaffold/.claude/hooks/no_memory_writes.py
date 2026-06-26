@@ -1,17 +1,4 @@
 #!/usr/bin/env python3
-"""PreToolUse hook: deny Write/Edit/MultiEdit/NotebookEdit on closed paths.
-
-Denied:
-
-- ``~/.claude/projects/<slug>/memory/`` — auto-memory.
-- ``~/.claude/projects/<slug>/MEMORY.md`` — top-level memory file.
-- ``~/.claude/CLAUDE.md`` — unscoped user-global priming.
-- ``~/.vaudeville/host.md`` — operator-owned host facts.
-
-Doctrine lives in ``~/.vaudeville/`` and is updated via vaudeville-config
-PRs. Pass-through on unmatched tools or paths.
-"""
-
 from __future__ import annotations
 
 import json
@@ -33,7 +20,7 @@ _MEMORY_REASON = (
     "This priming path is closed to AI writes. Doctrine lives in "
     "~/.vaudeville/. If the fact you are recording is already there, "
     "you do not need to write it. If it is not, surface the candidate "
-    "in chat as a doctrine-revision proposal; revisions land as PRs "
+    "in chat as a doctrine-revision proposal; revisions are submitted as PRs "
     "to vaudeville-config."
 )
 
@@ -45,7 +32,6 @@ _HOST_REASON = (
 
 
 def _classify(path: str) -> str | None:
-    """Return the reason category or None if the path is not closed."""
     resolved = os.path.realpath(os.path.expanduser(path))
     if resolved == _CLAUDE_MD:
         return _MEMORY_REASON
@@ -54,7 +40,7 @@ def _classify(path: str) -> str | None:
     if resolved == _CLAUDE_PROJECTS or resolved.startswith(_CLAUDE_PROJECTS + os.sep):
         rest = resolved[len(_CLAUDE_PROJECTS) + 1 :]
         parts = rest.split(os.sep)
-        # parts[0] is the project slug. memory/ subdir or the fossil top-level MEMORY.md.
+        # parts[0] is the project slug; guard the memory/ subdir and the top-level MEMORY.md.
         if len(parts) >= 2 and (
             parts[1] == "memory" or (len(parts) == 2 and parts[1] == "MEMORY.md")
         ):

@@ -24,13 +24,13 @@ If you are staring at such a problem, this framework stops being philosophy and 
 
 The framework is opinionated in directions that are largely abandoned because they are usually overkill. Two key points on this:
 
-- **It is XP and domain-driven design taken at full strength:** tests written before the code and named as contracts, a ubiquitous language that is enforced rather than encouraged, bounded contexts with real borders, docstrings banned, comments nearly banned, acceptance criteria banned outright.
+- **It is XP and domain-driven design taken at full strength:** tests written before the code and named as contracts, a ubiquitous language that is enforced rather than encouraged, bounded contexts with real borders, docstrings banned, comments nearly banned, acceptance criteria banned from premises.
 
-- **It manufactures friction on purpose.** The unit of work is not a ticket, but a _premise_. The agent is under standing instruction to oppose you. If what you want is an amiable executor of instructions, this will be a miserable fit. The friction is the product: the argument is where the work gets done that neither party could have done alone.
+- **It manufactures friction on purpose.** The characteristic unit of work is not a ticket, but a _premise_. The agent is under standing instruction to oppose you. If what you want is an amiable executor of instructions, this will be a miserable fit. The friction is the product: the argument is where the work gets done that neither party could have done alone.
 
 ## The code here is reorganized for reading
 
-The tree in this repository is not the source as it is developed: it has been reorganized for legibility. This mechanism also lets me write my drafts unobserved. Keeping the [Managed Repositories](./doctrine/vocabulary.md#managed-repository) private allows me to celebrate, despair, curse, kvetch, berate, and laugh at my own jokes in private. 
+The tree in this repository is not the source as it is developed: it has been reorganized for legibility. This mechanism also lets me write my drafts unobserved. Keeping the [Components](./doctrine/vocabulary.md#component) private allows me to celebrate, despair, curse, kvetch, berate, and laugh at my own jokes in private. 
 
 Dialectical engineering is [designed to surface misconceptions](./the-point.md). The process depends on you being _wrong_, _confused_, and _ignorant_. Doing that in front of an audience changes the character of that work.
 

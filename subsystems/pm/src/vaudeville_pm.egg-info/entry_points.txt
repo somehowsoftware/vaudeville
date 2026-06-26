@@ -1,3 +1,0 @@
-[console_scripts]
-vaudeville-pm = vaudeville_pm.operator_cli:main
-vv-pm = vaudeville_pm.cli:main

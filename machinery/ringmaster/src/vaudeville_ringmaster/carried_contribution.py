@@ -13,7 +13,7 @@ from vaudeville_ringmaster.contribution import Contribution
 def contribution_carries_a_wheel(contribution: Contribution) -> bool:
     # A distribution rides in the Artifact when it backs the integrated command line: the
     # Command-Surface Contributors and the libraries they share. A Contributor that builds its own
-    # CLI but contributes no Command Surface — the integrator itself — is build-time tooling, not
+    # CLI but contributes no Command Surface (the integrator itself) is build-time tooling, not
     # part of what installs.
     return contribution.distribution is not None and (
         contribution.manifest is not None or not contribution.console_scripts

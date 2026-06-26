@@ -17,8 +17,11 @@ import tomllib
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+
+from vaudeville_core.backend import Request
 
 
 def _read_credentials_file() -> tuple[str, str]:
@@ -94,7 +97,7 @@ def request(
     path: str,
     *,
     json_body: Any = None,
-    params: dict[str, str] | None = None,
+    params: Mapping[str, str] | None = None,
     timeout: int = 15,
     allow_404: bool = False,
 ) -> Any:
@@ -132,3 +135,13 @@ def request(
     except (urllib.error.URLError, json.JSONDecodeError) as exc:
         print(f"Error: YouTrack {method} {path} failed: {exc}", file=sys.stderr)
         sys.exit(1)
+
+
+def perform(req: Request) -> Any:
+    return request(
+        req.method,
+        req.path,
+        json_body=req.json_body,
+        params=req.params,
+        allow_404=req.allow_404,
+    )

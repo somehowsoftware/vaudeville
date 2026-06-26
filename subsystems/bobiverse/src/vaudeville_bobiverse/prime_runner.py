@@ -1,12 +1,3 @@
-"""Run one priming ``claude`` invocation, optionally streamed to a log sink.
-
-The thin shell around the priming subprocess: its only patchable surface is the
-syscall, so the failure modes — missing ``claude`` (exit 127) and a non-zero
-exit (propagated verbatim) — and the choice between inherited stdio and a log
-sink are pinned here and nowhere else. ``begin_log`` truncates a sink up front so
-a re-priming run never appends onto a stale log.
-"""
-
 from __future__ import annotations
 
 import subprocess
@@ -22,6 +13,8 @@ CLAUDE_MISSING_EXIT = 127
 def begin_log(log_path: Path | None) -> None:
     if log_path is not None:
         log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Truncate up front so a re-priming run starts a fresh log rather than
+        # appending onto a stale one.
         log_path.write_bytes(b"")
 
 

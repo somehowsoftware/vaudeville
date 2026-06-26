@@ -2,15 +2,15 @@
 
 Download one self-contained release artifact, point it at a config you write, and let it install and prime itself. Nothing to clone.
 
-> **Do this first:** install the prerequisites and fill in `credentials.toml` **before** you run the installer — it checks both and aborts if either is missing.
+> **Do this first:** install the prerequisites and fill in `credentials.toml` **before** you run the installer; it checks both and aborts if either is missing.
 
 ## Prerequisites
 For the timebeing, Vaudeville depends on [workmux](https://github.com/raine/workmux) and [YouTrack](https://www.jetbrains.com/youtrack/). They are both imperfect fits and will be replaced with custom-made parts in due time. For now, you're stuck with them.
 
-- **`uv`** on PATH — the installer runs through `uvx`. ([install](https://docs.astral.sh/uv/))
-- **`workmux`** on PATH — `vv spawn`/`vv fork` use it to cut each Bob's worktree and window. ([install](https://github.com/raine/workmux))
-- **A reachable YouTrack instance** — its API base URL (`https://your-instance.youtrack.cloud/api`) and a permanent token (`perm-...`).
-- **`gh` or `curl`, plus `tar`** — to fetch and unpack the release.
+- **`uv`** on PATH: the installer runs through `uvx`. ([install](https://docs.astral.sh/uv/))
+- **`workmux`** on PATH: Vaudeville uses it to cut each Bob's worktree and window. ([install](https://github.com/raine/workmux))
+- **A reachable YouTrack instance**: its API base URL (`https://your-instance.youtrack.cloud/api`) and a permanent token (`perm-...`).
+- **`gh` or `curl`, plus `tar`**: to fetch and unpack the release.
 
 ## 1. Get the release
 
@@ -30,24 +30,24 @@ Copy the [config template](https://github.com/somehowsoftware/vaudeville-config-
 
 | Path | Required | What it is |
 |------|----------|------------|
-| `vaudeville.toml` | yes | Project register — one repository per `[projects.<PREFIX>]` table. |
+| `vaudeville.toml` | yes | Project register: one repository per `[projects.<PREFIX>]` table. |
 | `credentials.toml` | yes | YouTrack `api_base` + `api_key`. Gitignored; copy from `credentials-example.toml`. |
 | `project-docs/` | no | Your cross-cutting docs, read by agents during priming. |
 
-**`vaudeville.toml`** — one table per repository, keyed by its tracker prefix (`WEB-42` → `WEB`):
+**`vaudeville.toml`** holds one table per repository, keyed by its tracker prefix (`WEB-42` → `WEB`):
 
 ```toml
 [projects.WEB]
-repo_path   = "~/src/webshop"                        # required — clone path on this host (~ expands)
-yt_id       = "0-5"                                  # required — tracker's internal project id
-description = "The customer-facing storefront."      # required — Vaudeville routes work to a repo by this
-remote      = "git@github.com:acme/webshop.git"      # optional — git URL; lets Vaudeville clone fresh at the current tip
+repo_path   = "~/src/webshop"                        # required: clone path on this host (~ expands)
+yt_id       = "0-5"                                  # required: tracker's internal project id
+description = "The customer-facing storefront."      # required: Vaudeville routes work to a repo by this
+remote      = "git@github.com:acme/webshop.git"      # optional: git URL; lets Vaudeville clone fresh at the current tip
 
 [spawn.downstream]
-command = ["vv", "premise-context"]                  # leave as-is
+command = ["vv", "assignment-context"]                  # leave as-is
 ```
 
-**`credentials.toml`** — fill in before installing:
+**`credentials.toml`** must be filled in before installing:
 
 ```toml
 [youtrack]
@@ -73,14 +73,14 @@ uvx --from cli/vaudeville_install-*.whl vaudeville-install \
 That one command:
 
 1. **Places the scaffold** under `~/.claude/`, `~/.vaudeville/`, `~/.local/bin/`, and copies your config into `~/.vaudeville` (it reads from there, never from your config directory).
-2. **Verifies the `vv` command surface.**
-3. **Verifies host wiring** — YouTrack reachable, `workmux` runnable. **Aborts here if either fails.**
-4. **Primes the Foundations** (`vv prime`) — one per project — and confirms them.
+2. **Verifies the installed command surface.**
+3. **Verifies host wiring**: YouTrack reachable, `workmux` runnable. **Aborts here if either fails.**
+4. **Primes the Foundations** (one per project) and confirms them.
 
 Priming is built in. You don't run it yourself.
 
 ## After installing
 
-- `vv` lives in `~/.local/bin`. Add that to your PATH if it isn't already.
-- Changed your config or doctrine? Re-prime with `vv prime`.
-- The unpacked artifact is safe to delete — everything now lives under `~/.claude`, `~/.vaudeville`, and `~/.local/bin`.
+- `vaudeville` lives in `~/.local/bin`. Add that to your PATH if it isn't already.
+- Changed your config or doctrine? Re-prime with `vaudeville prime`.
+- The unpacked artifact is safe to delete; everything now lives under `~/.claude`, `~/.vaudeville`, and `~/.local/bin`.

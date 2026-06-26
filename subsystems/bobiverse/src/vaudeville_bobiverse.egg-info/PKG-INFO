@@ -1,11 +1,11 @@
 Metadata-Version: 2.4
 Name: vaudeville-bobiverse
-Version: 2026.6.15.2
-Summary: Bob session lifecycle bounded context: vv subcommands and skills that spawn, run, and tear down Bobs.
+Version: 2026.6.26.5
+Summary: Bob session lifecycle Context: vv subcommands and skills that spawn, run, and tear down Bobs.
 Requires-Python: >=3.14
 Requires-Dist: click>=8.0
 Requires-Dist: typer>=0.12
-Requires-Dist: vaudeville-core>=2026.06.08.2
+Requires-Dist: vaudeville-core>=2026.06.26.1
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0; extra == "dev"
 Requires-Dist: mypy>=1.20; extra == "dev"

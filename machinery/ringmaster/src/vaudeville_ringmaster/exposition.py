@@ -10,7 +10,7 @@ from vaudeville_ringmaster.provenance import PROVENANCE_FILENAME
 from vaudeville_ringmaster.registry import Registry
 from vaudeville_ringmaster.session_clone import SessionClone
 
-# The parts of a Contributor Repo the Exposition gathers — the source and prose that show the
+# The parts of a Contributor Repo the Exposition gathers: the source and prose that show the
 # system, each copied only when present. `packages` carries workspace sub-packages a Contributor
 # ships beyond its own `src`: vaudeville-ringmaster's carried installer (`vaudeville_install`) lives
 # there and is built into every Artifact, so the rendering would omit shipped code without it. The
@@ -107,7 +107,8 @@ def _place_doctrine(doctrine_clone: SessionClone, into: Path) -> None:
     _refuse_symlinks_within(doc_tree)
     shutil.copytree(doc_tree, into / _DOCTRINE_DOC_TREE, symlinks=True)
     # The reading prose loose beside the Doc Tree renders at the Exposition root, so its README is
-    # the Published Home landing and a `doctrine/...` link from it resolves as it does in the repo.
+    # the front page of the committed Exposition on the Published Home and a `doctrine/...` link
+    # from it resolves as it does in the repo.
     # Contribution slots (the dot-directories Build reads) are not prose and stay out of the root.
     for entry in sorted(scaffold.iterdir()):
         if entry.name == _DOCTRINE_DOC_TREE or entry.name.startswith("."):

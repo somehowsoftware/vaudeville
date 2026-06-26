@@ -1,6 +1,6 @@
 """Compose the carried command line: the `vv` Facade and the `vaudeville` operator CLI.
 
-Both surfaces are composed the same way — each from a set of Contributor Typer apps, located
+Both surfaces are composed the same way: each from a set of Contributor Typer apps, located
 through the [tool.vaudeville] Manifest and unioned by one program-parameterized dispatcher. The
 Facade reads each Contributor's `binary`; the operator CLI reads its `operator_binary`. A
 Contributor that declares no operator app contributes nothing to `vaudeville`, exactly as one

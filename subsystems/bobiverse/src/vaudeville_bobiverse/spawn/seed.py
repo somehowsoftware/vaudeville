@@ -1,17 +1,3 @@
-"""Seed a stored Foundation transcript into a clone so ``workmux add --fork`` resolves.
-
-``--fork=<session-id>`` resolves the conversation within the *current worktree's*
-Claude project directory — the clone spawn cd's into. The Foundation transcript
-lives in the path-independent store, not under that clone's encoding, so spawn
-copies it in before ``workmux add``. This is what lets a Bob fork its Foundation
-no matter where its clone sits on disk.
-
-A successful seed yields a ``SeededClone``: the clone the transcript was copied
-into and the session the fork resolves. ``workmux`` builds its fork invocation
-only from that witness, so seed-before-fork is structural — a Bob cannot be
-launched against a clone its Foundation was never seeded into.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -32,6 +18,10 @@ class SeededClone:
 def seed_foundation(
     session_id: str, *, into_clone: Path, projects_root: Path, data_files_root: Path
 ) -> SeededClone:
+    # `workmux add --fork` resolves its source conversation within the clone's
+    # Claude project directory, but the Foundation transcript lives in the
+    # path-independent store, not under that clone's path encoding; so copy it in
+    # first, or the fork has nothing to resolve.
     store = foundation.transcript_store(data_files_root=data_files_root)
     try:
         claude_projects.copy_session(

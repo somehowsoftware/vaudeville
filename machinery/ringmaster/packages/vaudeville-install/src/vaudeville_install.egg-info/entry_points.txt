@@ -1,0 +1,2 @@
+[console_scripts]
+vaudeville-install = vaudeville_install.cli:main

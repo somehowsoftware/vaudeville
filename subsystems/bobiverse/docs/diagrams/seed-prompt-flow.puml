@@ -3,11 +3,11 @@
 ' The contract boundary between vaudeville-bobiverse and vaudeville-cue
 ' at Bob spawn. Bobiverse owns the Launcher (the file written to disk
 ' and handed to workmux); vaudeville-cue owns the seed prompt's content.
-' The configured downstream — [spawn.downstream] command in
-' vaudeville.toml, default `vv premise-context` in CUE — is the seam at
+' The configured downstream ([spawn.downstream] command in
+' vaudeville.toml, default `vv assignment-context` in CUE) is the seam at
 ' which the two contexts meet.
 
-title Seed-prompt contract — bobiverse / vaudeville-cue boundary
+title Seed-prompt contract: bobiverse / vaudeville-cue boundary
 
 skinparam shadowing false
 skinparam roundCorner 6
@@ -35,7 +35,7 @@ package "vaudeville-bobiverse" {
 }
 
 package "vaudeville-cue" {
-  rectangle "vv premise-context\n([spawn.downstream] default)" as downstream <<cue>>
+  rectangle "vv assignment-context\n([spawn.downstream] default)" as downstream <<cue>>
 }
 
 rectangle "workmux" as workmux <<external>>

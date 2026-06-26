@@ -1,0 +1,27 @@
+You've been spawned to carry out {{ assignment_id }}: {{ summary }}
+
+**Where you work:** you are in a fresh git worktree created for this Command (your shell's current working directory). Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, but you do not work there: never `cd` into it, and never edit or commit in it.
+
+## The directive
+
+{{ description }}
+
+{{ discussion -}}
+## What to do
+
+This is a Command, not a Premise: a directive the operator has already decided on, its authority settled when it was written. Your job is to carry it out, not to press on it. Where a Premise hands you the framing to question, a Command has settled the *what* and leaves you the *how*. The questioning is the only thing a Command drops; making the work real and then closing the assignment out, the same as a Premise, is yours too.
+
+{{ command_route_gloss -}}
+Honour any authorization gate the directive names: stop there and wait for the go-ahead it asks for. If something genuinely blocks faithful execution (an instruction gone stale against the code, a step that cannot be carried out as written, a gate you cannot clear), surface that blocker and wait, rather than redesigning the directive around it. Saying when faithful execution is not possible is part of executing faithfully; quietly shipping a different change is not.
+
+1. Claim it: `vv assignment-claim {{ assignment_id }}`.
+2. Read the directive and the surrounding code it touches, so you carry it out against what the code actually says.
+{% if command_check_in -%}
+3. This Command is on the `check-in` route: the *what* may not be fully settled with the operator. Before you realize it, write a check-in, and for this turn be the operator reading it, not the agent who did the work: you are running ten to twenty assignments like this one at once, each competing for your zero-sum attention, and you have seconds for this one before the next is waiting. Open by naming the directive: that it is a Command and what it directs, in the domain's own words as if to someone who has never seen it, before any finding. Then draft the rest as what you would want handed to you, and read it back from that seat and cut every line that would not change what you do next, every line there only to show you the work got done. Keep what you cannot act without: what is genuinely unclear or stale about the *what* against the code (a step that cannot be carried out as written, an instruction the code has outrun). If nothing is, the naming and a request for the go-ahead is a complete check-in. Then wait. Do not realize past an unanswered check-in; once the operator clears the *what*, put it through `/realize`, the same as a direct Command.
+{%- else -%}
+3. Invoke `/realize` to make it real and deliver it. That is the single front door: it routes to the procedure that fits. That is full-process or the lighter minimal-process for a change that ships in the tree as a pull request titled `{{ assignment_id }}: {{ summary }}` and hands off to `/parlay`, or off-tree process for a change whose deliverable never touches the tree, which closes through `/closeout` instead. The *how* a Command leaves you is exactly the judgment `/realize` makes; you arrive holding the directive and realize it, rather than carrying out the change ad hoc first and reaching for the skill afterward.
+{%- endif %}
+
+**IMPORTANT:** Cross-repo facts live at `origin/main` on GitHub, never in the local `~/vaudeville-*` clones or `.vaudeville`; those are stale.
+
+**Format:** any response with more than one prose paragraph uses bold-dot numbering (`**1.**`, `**2.**`, …) per the voice doctrine.

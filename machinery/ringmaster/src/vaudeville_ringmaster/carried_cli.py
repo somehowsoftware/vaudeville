@@ -5,8 +5,6 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import vaudeville_install
-
 import vaudeville_ringmaster
 from vaudeville_ringmaster.apply_plan import ApplyPlan
 from vaudeville_ringmaster.carried_contribution import contribution_carries_a_wheel
@@ -17,6 +15,9 @@ from vaudeville_ringmaster.facade import (
 )
 from vaudeville_ringmaster.facade_distribution import render_facade_distribution
 from vaudeville_ringmaster.uv_operations import BuildWheel
+
+INTEGRATOR_NAME = "vaudeville-ringmaster"
+_CARRIED_INSTALLER_SOURCE = Path("packages") / "vaudeville-install"
 
 
 def carry_integrated_cli_into(plan: ApplyPlan, into: Path, build_wheel: BuildWheel) -> None:
@@ -35,13 +36,19 @@ def carry_integrated_cli_into(plan: ApplyPlan, into: Path, build_wheel: BuildWhe
             version=vaudeville_ringmaster.__version__,
         )
         build_wheel(Path(facade_source), into)
-    # The installer rides inside the Artifact so a tenant can activate it with uv alone. Build
-    # runs from the integrator's source, where the installer is a workspace sibling, so its wheel
-    # is built from that source here rather than fetched.
-    build_wheel(_installer_project_root(), into)
+    build_wheel(_carried_installer_source_in(plan), into)
 
 
-def _installer_project_root() -> Path:
-    # vaudeville_install is installed from packages/vaudeville-install/src/vaudeville_install; its
-    # project root (the directory holding pyproject.toml) is two levels above the package directory.
-    return Path(vaudeville_install.__file__).resolve().parents[2]
+def _carried_installer_source_in(plan: ApplyPlan) -> Path:
+    # The installer is the integrator's workspace sibling; build it from the integrator's own source
+    # in the Plan (which Stage substitutes with the worktree under rehearsal) so the carried
+    # installer tracks the integrator it ships beside.
+    integrator = next((c for c in plan.contributions if c.name == INTEGRATOR_NAME), None)
+    if integrator is None:
+        raise IntegratorContributionMissing(INTEGRATOR_NAME)
+    return integrator.source_root / _CARRIED_INSTALLER_SOURCE
+
+
+class IntegratorContributionMissing(RuntimeError):
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Apply Plan has no {name!r} contribution to build the installer from.")

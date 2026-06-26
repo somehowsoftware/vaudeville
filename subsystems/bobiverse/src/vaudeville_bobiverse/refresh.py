@@ -1,5 +1,3 @@
-"""Reset every managed clone to a clean checkout of origin/main."""
-
 from __future__ import annotations
 
 import subprocess

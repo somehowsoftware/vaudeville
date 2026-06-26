@@ -14,7 +14,7 @@ Not a contract. The author cannot specify good output in advance; the situation 
 
 Not a list of [acceptance criteria](../vocabulary.md#acceptance-criteria). The reader, trained on human-style PM artefacts, treats acceptance criteria as the contract regardless of surrounding hedges; the reflex is downstream of training and cannot be repaired at the reading end, so the only place to correct is the author side. Do not author them.
 
-Not the conversation that produced it. Dumping the full conversation makes the Premise too long to be useful and gives the reader no clue what was load-bearing. The author's job is to identify the slice of context the reader will actually need.
+Not the conversation that produced it. Dumping the full conversation makes the Premise too long to be useful and gives the reader no clue what mattered. The author's job is to identify the slice of context the reader will actually need.
 
 ## What to put in a Premise
 
@@ -30,7 +30,7 @@ A Premise does *not* have space for:
 - Full conversation transcripts. Extract the slice; do not dump.
 - Confident specifications of mechanism. The reader chooses the mechanism.
 - Acceptance criteria of any kind. See above.
-- Tracker references that duplicate the graph. `X depends on Y` or `X is a subtask of Z` restates what the tracker already carries; the graph is the single source of truth. References that give coloring context — a lesson from a prior Premise, reasoning history, anything the graph cannot carry — are welcome.
+- Tracker references that duplicate the graph. `X depends on Y` or `X is a subtask of Z` restates what the tracker already carries; the graph is the single source of truth. References that give coloring context (a lesson from a prior Premise, reasoning history, anything the graph cannot carry) are welcome.
 
 ## How to read a Premise
 
@@ -40,4 +40,4 @@ Surface substantive disagreement to the human before proceeding; such disagreeme
 
 ## How this document gets revised
 
-When a Premise authored to this frame produces a check-in that goes off the rails — the reader anchored on something misleading, the situational awareness was insufficient, or the reader treated part of the Premise as a contract — revise this document. The frame is itself a humble snapshot and does not exempt itself from its own discipline.
+When a Premise authored to this frame produces a check-in that goes off the rails (the reader anchored on something misleading, the situational awareness was insufficient, or the reader treated part of the Premise as a contract), revise this document. The frame is itself a humble snapshot and does not exempt itself from its own discipline.

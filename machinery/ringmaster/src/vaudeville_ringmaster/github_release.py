@@ -21,7 +21,7 @@ class GhOutcome:
 
 def create_release_argv(*, repository: str, version: str, asset: Path, target: str) -> list[str]:
     # `--target` pins the new tag to the exposition commit Publish just pushed, rather than letting
-    # `gh` resolve it to the default-branch head at release time. Without it, anything that lands on
+    # `gh` resolve it to the default-branch head at release time. Without it, anything pushed to
     # the Published Home's default branch between that push and this call would steal the tag, and
     # the Release would carry one version's asset against another commit's source.
     return [
@@ -37,14 +37,14 @@ def create_release_argv(*, repository: str, version: str, asset: Path, target: s
         "--title",
         version,
         "--notes",
-        f"Vaudeville {version} — the integrated install artifact. "
+        f"Vaudeville {version}: the integrated install artifact. "
         "Download this asset and activate its carried installer.",
     ]
 
 
 def list_tags_argv(repository: str) -> list[str]:
     # The collision check is against git tags, not releases: `gh release create` reuses an existing
-    # tag — attaching the release to its stale commit instead of the Published Home's head — and a
+    # tag (attaching the release to its stale commit instead of the Published Home's head), and a
     # tag can outlive its release (a release deleted without its tag, a hand-made tag). `--paginate`
     # walks every page so no tag is missed.
     return ["gh", "api", "--paginate", f"repos/{repository}/tags", "--jq", ".[].name"]

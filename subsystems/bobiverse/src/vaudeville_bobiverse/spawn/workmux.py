@@ -1,13 +1,3 @@
-"""Allocate the working surface a Bob runs on: the ``workmux add`` invocation.
-
-``workmux_invocation`` builds the whole call as a value — argv plus the cwd the
-fork resolves against — from a ``SeededClone``. Taking the witness rather than a
-bare session id is what makes seed-before-fork structural: there is no way to
-name the ``--fork`` target except through a clone the Foundation was seeded into.
-``run_workmux`` is the dumb shell that performs the decided invocation; its only
-patchable surface is the subprocess syscall.
-"""
-
 from __future__ import annotations
 
 import subprocess

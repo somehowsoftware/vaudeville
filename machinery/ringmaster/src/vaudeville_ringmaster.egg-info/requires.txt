@@ -1,0 +1,11 @@
+jinja2>=3
+pydantic>=2
+PyYAML>=6
+typer>=0.12
+vaudeville-install
+
+[dev]
+pytest>=7.0
+mypy>=1.20
+ruff>=0.4
+types-PyYAML>=6

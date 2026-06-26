@@ -1,5 +1,3 @@
-"""Resolve the data-files root: ``$VV_DATA_DIR`` or ``~/.vaudeville``."""
-
 from __future__ import annotations
 
 import os

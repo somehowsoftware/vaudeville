@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 from typing import Annotated
 
 import typer
 from vaudeville_install.artifact import REGISTRY_FILENAME
+from vaudeville_install.destination import Host
 from vaudeville_install.doc_tree import DocTreeContainsSymlink
 
 from vaudeville_ringmaster import apply as _apply
@@ -40,25 +44,26 @@ from vaudeville_ringmaster.installer_activation import (
     InstallerNotCarried,
     activate_installer_with_uvx,
 )
+from vaudeville_ringmaster.pin import UnpinnableClone
 from vaudeville_ringmaster.pristine_guard import HotFixedSessionClones
-from vaudeville_ringmaster.provenance import MissingCloneProvenance
 from vaudeville_ringmaster.published_home import (
+    PUBLISHED_HOME,
     RINGMASTER_CREDENTIALS_FILENAME,
     PublishedHomeTokenMissing,
     gh_runner,
     git_runner,
     published_home_token,
 )
-from vaudeville_ringmaster.published_version import PUBLISHED_HOME
 from vaudeville_ringmaster.registry import load_registry
 from vaudeville_ringmaster.session_clone import MissingSessionClones
-from vaudeville_ringmaster.uv_operations import build_wheel_with_uv
+from vaudeville_ringmaster.uv_operations import build_wheel_with_uv, renew_builder_with_uv
 from vaudeville_ringmaster.worktree import Worktree
 
 app = typer.Typer(no_args_is_help=True)
 
 # Everything a deploy command surfaces to the operator as a clean exit-2 failure rather than a
-# traceback: the Session preconditions Ringmaster checks itself, and the carried installer's exit.
+# traceback: the Session preconditions Ringmaster checks itself, the carried installer's exit, and
+# Apply's Builder-renewal uv exit (a CalledProcessError, raised after the install completes).
 # Placement, host-wiring, priming, and Foundation failures belong to the installer, which prints
 # its own diagnostic and exits non-zero; that arrives here as InstallerFailed.
 _DEPLOY_ERRORS = (
@@ -68,12 +73,36 @@ _DEPLOY_ERRORS = (
     UnsafeBuildTarget,
     InstallerNotCarried,
     InstallerFailed,
+    subprocess.CalledProcessError,
 )
+
+# Publish reaches the Published Home (listing tags, creating the release, committing the source
+# Exposition), so it surfaces those interaction failures on top of the shared deploy set.
+_PUBLISH_ERRORS = (
+    *_DEPLOY_ERRORS,
+    PublishedHomeTokenMissing,
+    ReleaseCreationFailed,
+    TagListingFailed,
+    ExpositionCommitFailed,
+    ExpositionLayoutMismatch,
+    DoctrineSourceMissing,
+    ExpositionContainsSymlink,
+    UnpinnableClone,
+)
+
+
+@contextmanager
+def _surfaced_as_exit_2(errors: tuple[type[Exception], ...]) -> Iterator[None]:
+    try:
+        yield
+    except errors as failure:
+        typer.echo(str(failure), err=True)
+        raise typer.Exit(2) from failure
 
 
 def _registry_path() -> Path:
     # The roster of Contributor Repos is integrator-internal: it ships with Ringmaster as package
-    # data and is read from beside this module — never from the operator's config dir or
+    # data and is read from beside this module, never from the operator's config dir or
     # ~/.vaudeville, neither of which a fresh deploy can be trusted to hold it.
     return Path(__file__).parent / REGISTRY_FILENAME
 
@@ -91,6 +120,11 @@ def _staged_root_for(worktree_path: Path) -> Path:
     return Path.home() / ".vaudeville" / "staged" / digest
 
 
+def _renew_host_builder(builder_clone: Path) -> None:
+    layout = Host(home=Path.home()).layout
+    renew_builder_with_uv(builder_clone, bin_dir=layout.bin_dir, tool_dir=layout.tool_dir)
+
+
 @app.command()
 def clone() -> None:
     """Open a deploy Session."""
@@ -102,13 +136,10 @@ def clone() -> None:
 def build(out: Annotated[Path, typer.Option("--out")]) -> None:
     """Build the self-installing Artifact to a durable path and print it."""
     registry = load_registry(_registry_path())
-    try:
+    with _surfaced_as_exit_2(_DEPLOY_ERRORS):
         artifact = _build.build(
             registry, _session_clones_dir(), out, build_wheel=build_wheel_with_uv
         )
-    except _DEPLOY_ERRORS as e:
-        typer.echo(str(e), err=True)
-        raise typer.Exit(2) from e
     typer.echo(str(artifact.root))
 
 
@@ -116,7 +147,7 @@ def build(out: Annotated[Path, typer.Option("--out")]) -> None:
 def stage(worktree: Path) -> None:
     """Materialize a Release Candidate as a Staged Scaffold via the Artifact's carried installer."""
     registry = load_registry(_registry_path())
-    try:
+    with _surfaced_as_exit_2(_DEPLOY_ERRORS):
         staged = _stage.stage(
             registry,
             _session_clones_dir(),
@@ -127,9 +158,6 @@ def stage(worktree: Path) -> None:
             run_installer=activate_installer_with_uvx,
             host_home=Path.home(),
         )
-    except _DEPLOY_ERRORS as e:
-        typer.echo(str(e), err=True)
-        raise typer.Exit(2) from e
     typer.echo(str(staged))
 
 
@@ -137,26 +165,24 @@ def stage(worktree: Path) -> None:
 def apply() -> None:
     """Deploy the Session Clones to the Host via the Artifact's carried installer."""
     registry = load_registry(_registry_path())
-    try:
+    with _surfaced_as_exit_2(_DEPLOY_ERRORS):
         _apply.apply(
             registry,
             _session_clones_dir(),
             config_dir=_config_dir(),
             build_wheel=build_wheel_with_uv,
             run_installer=activate_installer_with_uvx,
+            renew_builder=_renew_host_builder,
         )
-    except _DEPLOY_ERRORS as e:
-        typer.echo(str(e), err=True)
-        raise typer.Exit(2) from e
 
 
 @app.command()
 def publish() -> None:
     """Publish the install Artifact and its source Exposition as a versioned release."""
     registry = load_registry(_registry_path())
-    try:
+    with _surfaced_as_exit_2(_PUBLISH_ERRORS):
         # Resolve the elevated token before any work, and present it to every Published Home
-        # interaction through the authenticated runners — gh and git both. Read from the
+        # interaction through the authenticated runners: gh and git both. Read from the
         # integrator-internal credentials file, never the deployed credentials.toml. Absent, this
         # aborts before the clone, build, or commit rather than using the ambient credential.
         token = published_home_token(_config_dir() / RINGMASTER_CREDENTIALS_FILENAME)
@@ -172,19 +198,6 @@ def publish() -> None:
             create_release=release_creator(run_gh),
             commit_exposition=exposition_committer(run_git),
         )
-    except (
-        *_DEPLOY_ERRORS,
-        PublishedHomeTokenMissing,
-        ReleaseCreationFailed,
-        TagListingFailed,
-        ExpositionCommitFailed,
-        ExpositionLayoutMismatch,
-        DoctrineSourceMissing,
-        ExpositionContainsSymlink,
-        MissingCloneProvenance,
-    ) as e:
-        typer.echo(str(e), err=True)
-        raise typer.Exit(2) from e
 
 
 @app.command()

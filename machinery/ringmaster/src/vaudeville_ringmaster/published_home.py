@@ -1,8 +1,8 @@
 """Authenticated access to the Published Home: resolve the elevated token, present it to gh and git.
 
 The single shell boundary every Published Home interaction goes through. Publish writes to the
-Published Home from three call sites — list tags and create release (via ``gh``) and the source
-commit (via ``git``) — and each must authenticate with the same elevated, Published-Home-scoped
+Published Home from three call sites: list tags and create release (via ``gh``) and the source
+commit (via ``git``). Each must authenticate with the same elevated, Published-Home-scoped
 token, never the broad credential the host's automation otherwise carries. ``gh`` reads ``GH_TOKEN``
 from its environment natively; raw ``git`` does not, so it is handed the token through an explicit
 credential helper rather than left to whatever ambient ``git_protocol`` or installed helper the host
@@ -24,6 +24,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from vaudeville_ringmaster.github_release import GhOutcome
+
+# The Published Home: the integrator-internal GitHub repository where Releases accumulate, organized
+# by Release Name. A Tenant consumes Releases from it; only the integrator publishes to it.
+PUBLISHED_HOME = "somehowsoftware/vaudeville"
 
 # The integrator-internal credentials file in the operator's config dir. Distinct from the tenant's
 # `credentials.toml` (which Install copies into the deployed data dir); this one is never deployed,

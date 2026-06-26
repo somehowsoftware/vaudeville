@@ -1,6 +1,6 @@
 click>=8.0
 typer>=0.12
-vaudeville-core>=2026.06.08.2
+vaudeville-core>=2026.06.26.1
 
 [dev]
 pytest>=7.0

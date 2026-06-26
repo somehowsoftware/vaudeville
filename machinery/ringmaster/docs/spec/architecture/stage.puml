@@ -3,13 +3,13 @@
 ' Stage is the verification path. It opens from the shared pipeline (drawn in
 ' pipeline.puml) with the one twist that makes a Release Candidate: the
 ' Worktree substitutes for its Owning Repo's Session Clone, so the pending
-' Contribution is the one integrated. Stage lands a Staged Scaffold — a single
+' Contribution is the one integrated. Stage installs a Staged Scaffold (a single
 ' self-contained root that mirrors the Host's Claude state so the smoke is
-' faithful — and never touches the Host.
+' faithful) and never touches the Host.
 
 !include elements.puml
 
-title Ringmaster — Stage (verification path)
+title Ringmaster: Stage (verification path)
 
 left to right direction
 

@@ -1,10 +1,10 @@
 """YouTrack issue-dict accessors. CORE-internal.
 
 The anti-corruption layer adapts raw YouTrack `/issues` payloads to
-the Vaudeville `Premise` domain type. These accessors are the low-level
+the Vaudeville `Assignment` domain type. These accessors are the low-level
 glue: one tier above the JSON shape, one tier below the consumer-facing
-`Premise`. Consumers never import this module — they receive `Premise`
-objects from `vaudeville_core.premises`.
+`Assignment`. Consumers never import this module; they receive `Assignment`
+objects from `vaudeville_core.assignments`.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import Any
 
 # YouTrack `fields` query value: id, summary, custom fields, linked issues
 # (with the resolved flag on their State), and the comment thread (text,
-# author display, creation stamp). The Premise adapter in `queries.py`
+# author display, creation stamp). The Assignment adapter in `queries.py`
 # passes this to `_youtrack.search` / `_youtrack.request` so the returned
 # dict matches what the accessors below assume.
 FIELDS = (
@@ -38,6 +38,10 @@ def field_name(issue: dict[str, Any], field: str) -> str:
 
 def state_resolved(issue: dict[str, Any]) -> bool:
     return bool(field_value(issue, "State").get("isResolved"))
+
+
+def signed_off(issue: dict[str, Any]) -> bool:
+    return field_name(issue, "Signed off") == "Yes"
 
 
 def linked(issue: dict[str, Any], link_type: str, direction: str) -> list[dict[str, Any]]:

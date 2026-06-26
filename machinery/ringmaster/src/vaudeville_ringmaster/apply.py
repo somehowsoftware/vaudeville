@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from vaudeville_ringmaster.assemble import assemble_apply_plan
@@ -21,13 +22,19 @@ def apply(
     config_dir: Path,
     build_wheel: BuildWheel,
     run_installer: RunInstaller,
+    renew_builder: Callable[[Path], None],
 ) -> None:
     clones = require_each_session_clone_present_in(registry, session_clones_dir)
     enforce_pristine_guard_on(clones)
     plan = assemble_apply_plan(registry, clones)
     with tempfile.TemporaryDirectory() as artifact_root:
         artifact = build_artifact(plan, Path(artifact_root), build_wheel=build_wheel)
-        # Hand the built Artifact to its own carried installer — the same self-install path a tenant
-        # runs — within the temp dir's lifetime, since the installer reads the Artifact by path. The
+        # Hand the built Artifact to its own carried installer (the same self-install path a tenant
+        # runs) within the temp dir's lifetime, since the installer reads the Artifact by path. The
         # installer owns placement and the host integrity/wiring/prime orchestration.
         run_installer(artifact_root=artifact.root, destination="host", config_dir=config_dir)
+    # Ringmaster isn't part of the scaffold the installer places, so the host's ringmaster would
+    # otherwise stay pinned while the code it deploys advances. Reinstall it from its own Session
+    # Clone (already Pristine-guarded above) after the install completes, so a failed deploy never
+    # moves it.
+    renew_builder(session_clones_dir / "vaudeville-ringmaster")

@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: vaudeville-install
+Version: 0.1.0
+Summary: The common Install half of Vaudeville: place a built Artifact at a Destination and make the host deployable-from. Rides inside the Artifact and is activated with uv alone.
+Requires-Python: >=3.14

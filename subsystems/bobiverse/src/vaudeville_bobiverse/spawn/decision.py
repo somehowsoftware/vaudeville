@@ -1,13 +1,3 @@
-"""The Foundation gate: whether a cleared Spawn has a session to fork, and which.
-
-``spawn_decision`` is the last of the composition root's three gates — backlog
-(preflight) and host-repo (target resolution) precede it. Given the session
-looked up for the Premise's Managed Repository, it returns either the
-``no_foundation_refusal`` or a ``SpawnClearance`` carrying that session. The
-clearance carries the resolved session rather than leaving it ``Optional``, so a
-cleared Spawn cannot reach the launch without a Foundation to fork.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,7 +20,7 @@ def no_foundation_refusal(prefix: str) -> SpawnRefusal:
     return SpawnRefusal(
         message=(
             f"Error: no Foundation for prefix {prefix!r}. "
-            f"Run `vv prime {prefix}` before spawning into this Managed Repository."
+            f"Run `vv prime {prefix}` before spawning into this Component."
         ),
         exit_code=NO_FOUNDATION_EXIT,
     )

@@ -1,29 +1,21 @@
-You've been spawned to work {{ premise_id }}: {{ summary }}
+You've been spawned to work {{ assignment_id }}: {{ summary }}
 
-**Where you work:** you are in a fresh git worktree created for this Premise — your shell's current working directory. Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, so you may reflexively `cd` into that clone as if it were "the repository"; do not. Stay in this worktree; never edit or commit in the main clone.
+**Where you work:** you are in a fresh git worktree created for this Premise (your shell's current working directory). Do every edit, test run, and commit *here*. Your Foundation was primed in the Contributor's main clone, but you do not work there: never `cd` into it, and never edit or commit in it.
 
 ## The Premise
 
 {{ description }}
 
 {{ discussion -}}
-## What I need from you (this is David talking)
-
-This is a `check-in`-route Premise. That means there is at least one decision worth talking about before you materialize. Your job is to find it and tell me about it.
-
-I am not here for ceremony. I do not need you to check the boxes. I need you to tell me what you _think_, at the level that's worth talking about. What you think might be that the Premise is wrong, that it is perfectly clear, that it is half-baked but you have it figured out, or that there is exactly one interesting question. Whatever it is, give me the part that actually needs me — which might be nothing.
-
-You are a very good IC. I am your TL. I have eight to fifteen of these going at once, and I do not have your Premise loaded when your check-in lands in my lap. Lead with one sentence in domain terms that names what this Premise is for, so I can orient on it before you walk me through the mechanism, the options, or your view. Tighter check-ins get read. Long ones get skimmed. Really long ones get angry replies. Aim for ~200–300 words. Don't tell me about variable names, function signatures, or which files you read — those are yours. Tell me about the decision that has more than one defensible option, the assumption in the framing that doesn't survive contact with the code, the boundary between two concerns that the Premise draws in the wrong place.
-
-A check-in with no open question is a valid shape when nothing is genuinely undecided. Do not manufacture one to look substantive. "Ready to proceed, awaiting your go-ahead" is a complete check-in if that is the truth.
-
+{{ dependencies -}}
 ## What to do
 
-1. Claim: `vv premise-claim {{ premise_id }}`.
-2. Read the surrounding code. Confirm the framing against what the code actually says.
-3. Form your view. Decide what is worth raising with me.
-4. Write the check-in. Then wait.
+**1.** Claim it: `vv assignment-claim {{ assignment_id }}`.
 
-**IMPORTANT:** The local `~/vaudeville-*` clones are almost always out of date. You must never, ever depend on them (or the local `.vaudeville`) for up-to-date cross-repo context. When cross-repo context is required, you must make a network request to GitHub and look at the latest origin/main.
+**2.** Ground yourself before you write a word of the check-in. Read the code the Premise touches and the work it depends on, and check the framing against them; where they disagree, the code wins. The body is the situation as its author read it: the facts you check against the code, never a verdict to take on its say-so. This is a Premise, so its goal is in play: press whether this is even the right thing to do, not only how. {% if signed_off %}The operator has signed off on this Premise: they have seen it and agree its framing represents what they meant to be discussing, so you and they start from the same picture of what is under discussion. That is all sign-off settles; it is not their judgement that the goal is right, and a Premise's goal stays yours to press, signed or not.{% else %}No one has put their name to this Premise: an agent most likely wrote it from a request for something related, and the operator may never have seen it, so do not take the body as carrying their intent; it may have missed what they actually asked for.{% endif %} Press hardest where being wrong would cost the most, not where it is easy to confirm. This is your own work: do it, don't narrate it.
+
+**3.** Now write the check-in, and for this turn be the operator reading it, not the agent who did the work. You are running ten to twenty assignments like this one at once, each competing for your zero-sum attention, all serving one coherent Project, and you have seconds for this one before the next is waiting. Open by naming the assignment: its kind and its goal, in the domain's own words as if to someone who has never seen it, before any finding. This is a hard rule, not one keep among several: a finding lands on no one who does not yet hold what it is a finding about, and this opening is the one part a reader with none of your context cannot reconstruct for themselves. Then draft the rest as the check-in you would want handed to you, and read it back from that seat and cut every line that would not change what you do next, every line there only to show you the work got done. The report that you grounded, that the grounding holds, that a check-in follows, is the first to go. Keep what you cannot act without: the places where your judgment would change what the agent produces. How many such places there are is whatever the work holds (none, one, or several, never a shape to fill); if it is none, the naming and that you are proceeding is itself a complete check-in. Then wait.
+
+**IMPORTANT:** Cross-repo facts live at `origin/main` on GitHub, never in the local `~/vaudeville-*` clones or `.vaudeville`; those are stale.
 
 **Format:** any response with more than one prose paragraph uses bold-dot numbering (`**1.**`, `**2.**`, …) per the voice doctrine.

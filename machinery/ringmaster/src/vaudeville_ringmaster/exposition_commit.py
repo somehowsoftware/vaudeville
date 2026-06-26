@@ -1,4 +1,4 @@
-"""The git boundary for Publish: land an Exposition on the Published Home as one labeled commit."""
+"""The git boundary for Publish: write an Exposition to the Published Home as one labeled commit."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def commit_exposition_with_git(
     # Returns the SHA of the commit it pushed, so Publish can pin the Release tag to exactly this
     # commit rather than to whatever the default branch head is at release time. Every git command
     # runs through the injected authenticated runner, which presents the resolved Published Home
-    # token over HTTPS — so both the clone and the push that extends the history use it.
+    # token over HTTPS, so both the clone and the push that extends the history use it.
     with tempfile.TemporaryDirectory() as checkout_parent:
         checkout = Path(checkout_parent) / "published-home"
         _require_success(

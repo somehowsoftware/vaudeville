@@ -1,14 +1,3 @@
-"""Move primed transcripts between a Current reading's project dir and the store.
-
-``claude`` keys a transcript by the cwd it ran in, so priming a Foundation has
-two transcript moves. ``seed_bedrock`` copies the shared Bedrock into the
-reading's project dir before the fork, so the cwd-scoped ``--resume`` resolves
-it. ``store_foundation_transcript`` lifts the forked Foundation out of that
-clone-path-encoded directory into the path-independent store, so it is seedable
-regardless of where it was primed — stored before the registry records the
-session, so a recorded Foundation is always present in the store.
-"""
-
 from __future__ import annotations
 
 import sys
@@ -21,6 +10,8 @@ from vaudeville_bobiverse import claude_projects, foundation
 def seed_bedrock(
     bedrock_session_id: str, *, reading: Path, projects_root: Path, data_files_root: Path
 ) -> None:
+    # `claude --resume` keys a transcript by the cwd it runs in, so copy the shared
+    # Bedrock into the reading's project dir before forking the Foundation there.
     bedrock_at = claude_projects.project_directory(data_files_root, projects_root=projects_root)
     try:
         claude_projects.copy_session(
@@ -38,6 +29,8 @@ def seed_bedrock(
 def store_foundation_transcript(
     session_id: str, *, primed_in: Path, projects_root: Path, data_files_root: Path
 ) -> None:
+    # Lift the forked Foundation out of its cwd-encoded project dir into the
+    # path-independent store, so it is seedable regardless of where it was primed.
     primed_at = claude_projects.project_directory(primed_in, projects_root=projects_root)
     try:
         claude_projects.copy_session(

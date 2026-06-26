@@ -1,14 +1,3 @@
-"""Claude Code's per-path session storage layout, and copying a session between locations.
-
-Claude Code keeps each session under ``$CLAUDE_CONFIG_DIR/projects/<encoded-cwd>/``
-— a ``<session-id>.jsonl`` spine plus an optional ``<session-id>/`` sidecar
-directory of persisted tool-results. The directory name is encoded from the cwd
-the session ran in, which is why a Foundation primed at one path is not
-addressable from a clone at another. Seeding a stored Foundation transcript into
-the clone's project directory is how Spawn makes ``workmux add --fork`` resolve
-regardless of where the clone lives.
-"""
-
 from __future__ import annotations
 
 import re

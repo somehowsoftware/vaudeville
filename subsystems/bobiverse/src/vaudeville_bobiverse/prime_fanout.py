@@ -1,14 +1,3 @@
-"""Fork a Foundation per Contributor — capped, failure-isolated — and report.
-
-``fork_every_foundation`` maps the prefixes through an injected per-Contributor
-fork under a concurrency cap, turning each result into a ``PrimeOutcome`` and
-each Contributor's ``SystemExit`` into one failed outcome that does not sink the
-others. The fork is handed in, so this piece never knows what work it
-parallelizes — and its cap and isolation are asserted with a plain fake fork,
-not by intercepting priming. ``prime_report`` splits the outcomes into the
-stdout/stderr lines and the process exit code.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
@@ -16,10 +5,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
-# Each Foundation fork drives its own `claude` session. Fanning out one worker per
-# Contributor saturated the model API and tripped a server-side concurrency throttle
-# ("not your usage limit") when `ringmaster apply` forked every Foundation at once. Cap
-# the fan-out so a many-Contributor host still forks in parallel without self-throttling.
+# Each Foundation fork drives its own `claude` session. Forking every Contributor
+# at once saturates the model API and trips a server-side concurrency throttle, so
+# cap the fan-out; a many-Contributor host still forks in parallel without
+# self-throttling.
 MAX_PRIME_CONCURRENCY = 3
 
 
@@ -56,6 +45,28 @@ def fork_every_foundation(
             else:
                 outcomes.append(PrimeOutcome(prefix, log_path_for(prefix), session_id=session_id))
     return outcomes
+
+
+def prime_from_shared_bedrock(
+    prefixes: list[str],
+    make_bedrock: Callable[[], str],
+    fork_one: Callable[[str, str], str],
+    log_path_for: Callable[[str], Path],
+    *,
+    max_concurrency: int,
+) -> list[PrimeOutcome]:
+    # One shared Bedrock feeds every fork, so it is stood up once and only when at
+    # least one Foundation will fork from it: an empty Component set forks nothing and
+    # so drives no Bedrock turns, rather than standing up a Bedrock nothing consumes.
+    if not prefixes:
+        return []
+    bedrock_session_id = make_bedrock()
+    return fork_every_foundation(
+        prefixes,
+        lambda prefix: fork_one(bedrock_session_id, prefix),
+        log_path_for,
+        max_concurrency=max_concurrency,
+    )
 
 
 def prime_report(outcomes: Sequence[PrimeOutcome]) -> tuple[list[str], list[str], int]:

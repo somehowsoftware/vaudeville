@@ -1,7 +1,7 @@
 """The doc-tree slot discovery: which subtrees a Contributor offers for the host data dir.
 
 A doc tree is a directory a Contributor ships under ``scaffold/<name>/`` for a known, hardcoded
-name — the universal doctrine every tenant primes against (``doctrine/``). Discovery here finds
+name: the universal doctrine every tenant primes against (``doctrine/``). Discovery here finds
 which the Contributor offers; the installer owns placing one (and the symlink refusal), and the
 [artifact contract](../../packages/vaudeville-install) owns the slot names.
 """

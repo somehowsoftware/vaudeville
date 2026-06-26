@@ -1,4 +1,4 @@
-# Ringmaster Registry — the integrator-internal roster of Contributor Repos to assemble.
+# Ringmaster Registry: the integrator-internal roster of Contributor Repos to assemble.
 # Ships with the Ringmaster package and is read from beside the module: the roster of what to
 # assemble stays with the integrator and is never sourced from ~/.vaudeville or the operator's
 # config dir. Each entry pairs a Contributor Repo name with its git remote; Clone fetches

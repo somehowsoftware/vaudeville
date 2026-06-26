@@ -2,7 +2,7 @@
 
 ' The pipeline Stage and Apply share, drawn once so neither path diagram
 ' repeats it. Assemble (read-only) requires each Session Clone, walks it for
-' its Contribution, and folds them into a validated Apply Plan — the single
+' its Contribution, and folds them into a validated Apply Plan: the single
 ' site a colliding federation is rejected. Build integrates the Plan and the
 ' Contributor sources into a self-contained Artifact (collected files plus the
 ' integrated CLI carried as installable wheels, resolvable against those wheels
@@ -12,7 +12,7 @@
 
 !include elements.puml
 
-title Ringmaster — shared deploy pipeline (Assemble → Build → Install)
+title Ringmaster: shared deploy pipeline (Assemble → Build → Install)
 
 left to right direction
 
@@ -32,7 +32,7 @@ build    --> artifact : produces
 artifact --> install  : placed by
 install  --> uv       : install the Facade\n(carried wheels + public index)
 
-note right of install : produces a Host or Staged Scaffold —\nsee the Apply and Stage diagrams
+note right of install : produces a Host or Staged Scaffold:\nsee the Apply and Stage diagrams
 
 ' Drop UL elements declared in elements.puml but not referenced here, so the
 ' rendered SVG carries no orphan boxes.

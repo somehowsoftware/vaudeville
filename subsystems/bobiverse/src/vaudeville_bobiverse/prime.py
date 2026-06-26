@@ -1,22 +1,17 @@
-"""The priming composition roots: drive a Bedrock, fork a Foundation from it.
-
-These own the lifecycles priming runs inside — the minted session ids and the
-Current reading that ``fork_foundation`` opens and tears down — so they are
-composition roots, left untested by design. Every decision they sequence is a
-piece tested on its own: the invocations (``prime_invocations``), the runner
-(``prime_runner``), and the transcript moves (``prime_store``). The store-before-
-record invariant is structural here: ``store_foundation_transcript`` is the last
-statement inside the reading, ``foundation.save`` the first after it closes.
-"""
-
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 
-from vaudeville_core import current_reading_of_project
+from vaudeville_core import current_reading_of_component
 
 from vaudeville_bobiverse import foundation
+from vaudeville_bobiverse.prime_fanout import (
+    MAX_PRIME_CONCURRENCY,
+    PrimeOutcome,
+    prime_from_shared_bedrock,
+)
 from vaudeville_bobiverse.prime_invocations import (
     CONTRIBUTOR_TURN,
     ClaudeInvocation,
@@ -25,6 +20,10 @@ from vaudeville_bobiverse.prime_invocations import (
 )
 from vaudeville_bobiverse.prime_runner import begin_log, run_claude
 from vaudeville_bobiverse.prime_store import seed_bedrock, store_foundation_transcript
+
+# Both the Bedrock and each concurrent fork stream to their own file here so the
+# parallel prime-all run's logs never interleave.
+PRIME_LOG_DIR = Path("/tmp")
 
 
 def prime_bedrock(*, data_files_root: Path, log_path: Path | None = None) -> str:
@@ -47,7 +46,7 @@ def fork_foundation(
 ) -> str:
     foundation_session_id = str(uuid.uuid4())
     begin_log(log_path)
-    with current_reading_of_project(prefix) as reading:
+    with current_reading_of_component(prefix) as reading:
         seed_bedrock(
             bedrock_session_id,
             reading=reading,
@@ -67,6 +66,8 @@ def fork_foundation(
             projects_root=projects_root,
             data_files_root=data_files_root,
         )
+    # Record the session only after its transcript is safely in the store, so a
+    # registered Foundation is never one a later spawn cannot find.
     foundation.save(prefix, foundation_session_id, data_files_root=data_files_root)
     return foundation_session_id
 
@@ -78,6 +79,36 @@ def prime(prefix: str, *, data_files_root: Path, projects_root: Path) -> str:
         prefix,
         data_files_root=data_files_root,
         projects_root=projects_root,
+    )
+
+
+def prime_log_path(prefix: str) -> Path:
+    return PRIME_LOG_DIR / f"prime-{prefix.lower()}.log"
+
+
+def prime_all(
+    prefixes: list[str],
+    *,
+    data_files_root: Path,
+    projects_root: Path,
+    log_path_for: Callable[[str], Path] = prime_log_path,
+    max_concurrency: int = MAX_PRIME_CONCURRENCY,
+) -> list[PrimeOutcome]:
+    # `vv prime` (no prefix) and `vaudeville prime --all` are the same act, so the
+    # wiring that binds the live roots into the Bedrock and fork effects lives here,
+    # once; the bedrock-once-then-fan-out policy it feeds is pure and tested apart.
+    return prime_from_shared_bedrock(
+        prefixes,
+        lambda: prime_bedrock(data_files_root=data_files_root, log_path=log_path_for("bedrock")),
+        lambda bedrock_session_id, prefix: fork_foundation(
+            bedrock_session_id,
+            prefix,
+            data_files_root=data_files_root,
+            projects_root=projects_root,
+            log_path=log_path_for(prefix),
+        ),
+        log_path_for,
+        max_concurrency=max_concurrency,
     )
 
 

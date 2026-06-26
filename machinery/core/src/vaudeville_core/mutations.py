@@ -1,8 +1,7 @@
 """Write paths through the anti-corruption layer.
 
-Consumers ask the kernel to create / transition / annotate Premises in
-Vaudeville vocabulary. This module owns every backend write — the
-private YouTrack client is reached only through helpers defined here.
+Consumers ask vaudeville-core to create / transition / annotate Assignments
+in Vaudeville vocabulary.
 """
 
 from __future__ import annotations
@@ -12,37 +11,30 @@ from pathlib import Path
 from typing import Any
 
 from vaudeville_core import _youtrack
+from vaudeville_core.backend import Request
+from vaudeville_core.component import prefixes, tracker_project_id_for_prefix
 from vaudeville_core.config_file import (
     VAUDEVILLE_FILENAME,
     _abort,
     host_config_path,
     load_config,
 )
-from vaudeville_core.project import prefixes, tracker_project_id_for_prefix
 
 
-def create_premise(
-    project: str,
+def create_assignment_request(
+    tracker_project_id: str,
     *,
     summary: str,
     description: str,
     route: str,
     type: str = "Premise",
     workflow: str = "Submitted",
-    host_config_dir: Path | None = None,
-) -> str:
-    """Create a Premise and return its idReadable.
-
-    ``project`` is the Vaudeville short-name (e.g. ``BOB``). The
-    consumer does not supply or see a YouTrack opaque project id —
-    the kernel resolves the short-name internally.
-    """
-    tracker_id = _tracker_project_id(project, host_config_dir)
-    response = _youtrack.request(
+) -> Request:
+    return Request(
         "POST",
         "/issues",
-        json_body={
-            "project": {"id": tracker_id},
+        {
+            "project": {"id": tracker_project_id},
             "summary": summary,
             "description": description,
             "customFields": [
@@ -53,6 +45,68 @@ def create_premise(
         },
         params={"fields": "idReadable"},
     )
+
+
+def command_request(query: str, assignment_id: str) -> Request:
+    return Request("POST", "/commands", {"query": query, "issues": [{"idReadable": assignment_id}]})
+
+
+def claim_assignment_request(assignment_id: str) -> Request:
+    return command_request("state Active Workflow Claimed", assignment_id)
+
+
+def add_depend_request(source: str, target: str) -> Request:
+    return command_request(f"depends on {target}", source)
+
+
+def remove_depend_request(source: str, target: str) -> Request:
+    return command_request(f"remove depends on {target}", source)
+
+
+def attach_subtask_request(child: str, parent: str) -> Request:
+    return command_request(f"subtask of {parent}", child)
+
+
+def add_comment_request(assignment_id: str, body: str) -> Request:
+    return Request("POST", f"/issues/{assignment_id}/comments", {"text": body})
+
+
+def sign_off_request(assignment_id: str) -> Request:
+    return Request(
+        "POST",
+        f"/issues/{assignment_id}",
+        {"customFields": [_single_enum("Signed off", "Yes")]},
+        params={"fields": "idReadable"},
+    )
+
+
+def create_assignment(
+    component: str,
+    *,
+    summary: str,
+    description: str,
+    route: str,
+    type: str = "Premise",
+    workflow: str = "Submitted",
+    host_config_dir: Path | None = None,
+) -> str:
+    """Create an Assignment and return its idReadable.
+
+    ``component`` is the Vaudeville short-name (e.g. ``BOB``). The consumer
+    does not supply or see a YouTrack opaque project id; vaudeville-core
+    resolves the short-name internally.
+    """
+    tracker_id = _tracker_project_id(component, host_config_dir)
+    response = _youtrack.perform(
+        create_assignment_request(
+            tracker_id,
+            summary=summary,
+            description=description,
+            route=route,
+            type=type,
+            workflow=workflow,
+        )
+    )
     if not isinstance(response, dict) or "idReadable" not in response:
         print(
             f"Error: backend returned unexpected payload on create: {response!r}",
@@ -62,29 +116,37 @@ def create_premise(
     return str(response["idReadable"])
 
 
-def claim_premise(premise_id: str) -> None:
-    """Transition State→Active and Workflow→Claimed for ``premise_id``."""
-    _run_command("state Active Workflow Claimed", premise_id)
+def claim_assignment(assignment_id: str) -> None:
+    """Transition State→Active and Workflow→Claimed for ``assignment_id``."""
+    _youtrack.perform(claim_assignment_request(assignment_id))
 
 
-def add_comment(premise_id: str, body: str) -> None:
-    """Append a comment to ``premise_id``."""
-    _youtrack.request("POST", f"/issues/{premise_id}/comments", json_body={"text": body})
+def add_comment(assignment_id: str, body: str) -> None:
+    """Append a comment to ``assignment_id``."""
+    _youtrack.perform(add_comment_request(assignment_id, body))
+
+
+def sign_off(assignment_id: str) -> None:
+    """Mark ``assignment_id`` signed off: the operator's go-ahead that admits a
+    Command or Manual to the pickup pool. Premise and Direction are pickable
+    without it; for them sign-off is irrelevant, not required.
+    """
+    _youtrack.perform(sign_off_request(assignment_id))
 
 
 def add_depend(source: str, target: str) -> None:
     """Make ``source`` depend on ``target``. Idempotent."""
-    _run_command(f"depends on {target}", source)
+    _youtrack.perform(add_depend_request(source, target))
 
 
 def remove_depend(source: str, target: str) -> None:
     """Remove ``source``'s ``depends on `target`` edge. Idempotent."""
-    _run_command(f"remove depends on {target}", source)
+    _youtrack.perform(remove_depend_request(source, target))
 
 
 def attach_subtask(child: str, parent: str) -> None:
     """Make ``child`` a Subtask of ``parent``. Idempotent."""
-    _run_command(f"subtask of {parent}", child)
+    _youtrack.perform(attach_subtask_request(child, parent))
 
 
 def _tracker_project_id(short_name: str, host_config_dir: Path | None = None) -> str:
@@ -97,18 +159,9 @@ def _tracker_project_id(short_name: str, host_config_dir: Path | None = None) ->
     if tracker_id is None:
         known = ", ".join(prefixes(config)) or "<empty>"
         register = host_config_path(VAUDEVILLE_FILENAME, host_config_dir)
-        _abort(f"project {short_name!r} not in {register} (known: {known})")
+        _abort(f"Component {short_name!r} not in {register} (known: {known})")
     return tracker_id
 
 
 def _single_enum(name: str, value: str) -> dict[str, Any]:
     return {"name": name, "$type": "SingleEnumIssueCustomField", "value": {"name": value}}
-
-
-def _run_command(query: str, premise_id: str) -> None:
-    """POST to YouTrack's commands API for one Premise. Idempotent by design."""
-    _youtrack.request(
-        "POST",
-        "/commands",
-        json_body={"query": query, "issues": [{"idReadable": premise_id}]},
-    )

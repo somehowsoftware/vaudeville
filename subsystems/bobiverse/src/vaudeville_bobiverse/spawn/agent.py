@@ -1,11 +1,3 @@
-"""The command line a spawned Bob's Claude Code session launches with.
-
-`agent_command` composes the harness flags every Bob runs under with the
-environment the spawning shell must hand across the tmux-server boundary. It is
-pure over the propagated environment and the worktree name, so the whole command
-is asserted by value rather than by intercepting the launch.
-"""
-
 from __future__ import annotations
 
 import os
@@ -37,10 +29,10 @@ SPAWN_AGENT = (
 # spawning shell's, so these values reach the spawned claude only when baked
 # onto its command line. They matter when a rehearse points the lifecycle at a
 # Staged Scaffold rather than the host install:
-#   - CLAUDE_CONFIG_DIR — where `claude --resume` looks for the Foundation
+#   - CLAUDE_CONFIG_DIR: where `claude --resume` looks for the Foundation
 #     transcript, and where it loads skills and hooks from.
-#   - PATH — which `vv`/`vv-bob`/`vv-cue`/`vv-pm` and the exit teardown resolve to.
-#   - VV_DATA_DIR — where vv reads and writes Foundation state.
+#   - PATH: which `vv`/`vv-bob`/`vv-cue`/`vv-pm` and the exit teardown resolve to.
+#   - VV_DATA_DIR: where vv reads and writes Foundation state.
 _PROPAGATED_ENV_VARS = ("CLAUDE_CONFIG_DIR", "VV_DATA_DIR", "PATH")
 
 

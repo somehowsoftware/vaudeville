@@ -1,16 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import NamedTuple
-
 from vaudeville_core import _youtrack
+from vaudeville_core.backend import Request
 from vaudeville_core.profiles import ExitProfile
-
-
-class Request(NamedTuple):
-    method: str
-    path: str
-    json_body: Mapping[str, object]
 
 
 def comment_text(profile: ExitProfile, reason: str) -> str:
@@ -30,23 +22,23 @@ def field_updates(profile: ExitProfile) -> list[dict[str, object]]:
     return fields
 
 
-def bookkeeping_requests(premise_id: str, profile: ExitProfile, reason: str) -> list[Request]:
+def transition_request(assignment_id: str, profile: ExitProfile) -> Request:
+    return Request("POST", f"/issues/{assignment_id}", {"customFields": field_updates(profile)})
+
+
+def bookkeeping_requests(assignment_id: str, profile: ExitProfile, reason: str) -> list[Request]:
     requests: list[Request] = []
     if profile.comment_header:
         comment = {"text": comment_text(profile, reason)}
-        requests.append(Request("POST", f"/issues/{premise_id}/comments", comment))
-    requests.append(
-        Request("POST", f"/issues/{premise_id}", {"customFields": field_updates(profile)})
-    )
+        requests.append(Request("POST", f"/issues/{assignment_id}/comments", comment))
+    requests.append(transition_request(assignment_id, profile))
     return requests
 
 
-def apply_bookkeeping(premise_id: str, profile: ExitProfile, reason: str) -> None:
-    for request in bookkeeping_requests(premise_id, profile, reason):
-        _youtrack.request(request.method, request.path, json_body=request.json_body)
+def apply_bookkeeping(assignment_id: str, profile: ExitProfile, reason: str) -> None:
+    for request in bookkeeping_requests(assignment_id, profile, reason):
+        _youtrack.perform(request)
 
 
-def apply_transition(premise_id: str, profile: ExitProfile) -> None:
-    _youtrack.request(
-        "POST", f"/issues/{premise_id}", json_body={"customFields": field_updates(profile)}
-    )
+def apply_transition(assignment_id: str, profile: ExitProfile) -> None:
+    _youtrack.perform(transition_request(assignment_id, profile))

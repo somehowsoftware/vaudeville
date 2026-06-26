@@ -1,14 +1,3 @@
-"""Pre-accept Claude Code's folder-trust for a spawned Bob's worktree.
-
-Claude Code blocks on an interactive "trust this folder?" dialog the first time
-it opens a directory not recorded as trusted. A spawned Bob runs headless under
-Remote Control, so no one answers it and the Bob hangs before it reads its Brief.
-Spawning a Bob into a worktree is the operator trusting that worktree, so the
-spawn writes the ``hasTrustDialogAccepted`` flag Claude Code records on a human's
-acceptance — into ``$CLAUDE_CONFIG_DIR/.claude.json``, or ``~/.claude.json`` on
-the host install — before launch.
-"""
-
 from __future__ import annotations
 
 import fcntl
@@ -36,6 +25,10 @@ def config_trusting_worktree(config: dict[str, Any], worktree: Path) -> dict[str
 
 
 def record_worktree_trust(worktree: Path, *, config_file: Path) -> None:
+    # A headless spawned Bob cannot answer Claude Code's interactive "trust this
+    # folder?" dialog and would hang before reading its Brief. Spawning a Bob into
+    # a worktree is the operator trusting it, so pre-write the flag Claude Code
+    # otherwise records only on a human's acceptance.
     config_file.parent.mkdir(parents=True, exist_ok=True)
     # A fanout close (`/onward`) and concurrent closes spawn several Bobs at once,
     # each rewriting this one shared file; hold an exclusive lock across the
