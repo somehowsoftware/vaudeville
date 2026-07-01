@@ -22,11 +22,6 @@ The reading that matters is differential. A frontier-capable reader, dropped int
 - As the closing bookend of [`/prose`](../prose/SKILL.md): the composer hands a finished piece here before it is accepted.
 - Standalone, against prose already shipped: a skill, a doctrine passage, a framing you suspect is inert or misfiring. The assay needs only the prose and a true picture of who reads it; it does not need to have composed the prose.
 
-## When not to use
-
-- **To catch an author-side defect.** A warning that reacts to a draft the reader never saw, a line addressed to a phase the reader has not reached, a reference to something the prose forgot to supply: these change a reader's action not at all, so the assay reads them as inert and tells you nothing. They are caught while composing, against what the reader holds, not here. The assay measures force on a reader; it is blind, by construction, to a defect no reader could feel. It does not replace the author-side passes; it stands beside them.
-- **On prose with no reader who acts.** If nothing downstream *does* anything on the strength of these words, there is no action to move and nothing to measure.
-
 ## The three offices
 
 The assay's validity rests on keeping three roles in three different hands. Collapse any two and the result launders the author's intent instead of testing it.

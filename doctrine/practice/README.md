@@ -22,6 +22,7 @@ Four primary tools:
 - [Tolerances](./tolerances.md)
 - [Drive through; redesign before escalating](./drive-through.md)
 - [Signal-side leverage under noisy measurement](./signal-side-leverage.md)
+- [Prose is code](./prose-is-code.md)
 - [Portfolio, not master design](./portfolio.md)
 - [No behavioral issue](./no-behavioral-issue.md)
 - [Trust posture](./trust-posture.md)

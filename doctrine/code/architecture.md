@@ -40,7 +40,7 @@ A boundary that resolves a real production location (the live-data directory, a 
 
 This makes the direction of failure structural rather than a matter of care: forgetting to supply an injected, defaultless boundary stops the operation and the omission shows immediately (fail-safe), while forgetting to override a boundary that defaults to production runs the operation against production (fail-deadly). Injection makes clobbering production by default impossible to express.
 
-This pairs with a functional core and an imperative shell: the pure core takes values, and all I/O lives in a thin shell injected at the same edge. A test that reaches real I/O (filesystem, network, process state such as the environment or command line) to exercise otherwise-pure logic signals a boundary still resolved inside the logic rather than injected; the repair is the interface, not a sandbox around the test.
+This pairs with a functional core and an imperative shell: the pure core takes values, and all I/O lives in a thin shell injected at the same edge. When a test holds a unit's declared inputs fixed, substitutes a collaborator the unit reaches for internally, and the behaviour moves, the unit depends on something its interface never declared. This is one defect with two faces: the loud, rare one reaches the real boundary (filesystem, network, process state) to exercise otherwise-pure logic; the quiet, common one patches that collaborator away to run green and fast. The repair for both is the interface, not a sandbox around the test: inject the boundary so the core takes it as a value, never a second mock re-asserting the patched call.
 
 ## Main is the production line
 

@@ -51,10 +51,10 @@ If the pass surfaces a new or defective term, this is where the vocabulary grows
 
 ### 4. Surface the committed design
 
-Surface the committed design to the operator, tight, organized as the three axes; this is the residue of the pass, the way a check-in is the residue of its discussion. `/design` itself does not implement, and it does not decide what happens next: whether to stop here is the **caller's** call, not this skill's.
+Surface the committed design, tight, organized as the three axes: the residue of the pass, distilled rather than dumped. `/design` itself does not implement, and it does not decide what happens next: whether to stop here is the **caller's** call, not this skill's.
 
-- **Standalone** (run by hand, ahead of any procedure): surface and stop. The design lives in this conversation; the operator decides when to realize it.
-- **Invoked by a procedure**: surface and keep going. `/design` has done its job the moment the design is surfaced; the procedure carries on from there.
+- **Standalone** (run by hand, ahead of any procedure): surface to the operator and stop. The design lives in this conversation; the operator decides when to realize it.
+- **Invoked by a procedure**: emit the committed design into the conversation and keep going in the same turn. This is not a decision point and it waits for no reply: the procedure's next step checkpoints, and the committed design crosses the clear as the Carryover. Stopping during an autonomous procedure breaks flow and is unnecessary; the operator has already pre-approved the agent's decision by starting an autonomous run.
 
 ## Non-goals
 

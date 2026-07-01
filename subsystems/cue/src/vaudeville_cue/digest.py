@@ -24,7 +24,7 @@ def accumulate(prior: Sequence[Section], latest: Section) -> tuple[Section, ...]
 
 _DIGEST_HEADER = (
     "# Operator turns: verbatim, in order, cumulative across this Bob's checkpoints.\n"
-    "# A /clear starts a new session; each section below holds one session's operator turns,\n"
+    "# A reseat starts a new session; each section below holds one session's operator turns,\n"
     "# kept so a later checkpoint does not lose the earlier ones. Within a section, a turn's\n"
     "# header names the lines it spans in that session's transcript; `via /tmp` was relayed\n"
     "# through the operator's tmp file.\n"

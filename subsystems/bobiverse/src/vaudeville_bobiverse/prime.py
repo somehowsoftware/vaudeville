@@ -47,6 +47,12 @@ def fork_foundation(
     foundation_session_id = str(uuid.uuid4())
     begin_log(log_path)
     with current_reading_of_component(prefix) as reading:
+        # Claude Code names a session's project dir from the realpath-resolved cwd, so
+        # encode the resolved reading: where the host reaches its temp root through a
+        # symlink (macOS routes $TMPDIR through /var -> /private/var, and the reading
+        # clone is minted under $TMPDIR), the unresolved path encodes a slug the forked
+        # session was never written under, and the resume finds no conversation.
+        reading = reading.resolve()
         seed_bedrock(
             bedrock_session_id,
             reading=reading,

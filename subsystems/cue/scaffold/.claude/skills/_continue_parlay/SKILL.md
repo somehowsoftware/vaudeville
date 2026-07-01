@@ -2,11 +2,11 @@
 name: _continue_parlay
 description: >
   Machinery, not a human command: the continuation `/parlay` checkpoints into.
-  Watch every open PR an assignment produced for Codex review comments, merge
-  conflicts, and CI failures, addressing each as a symptom of a deeper issue,
-  not a line-edit. Converges each PR in turn against the same targets (sleep →
-  resolve conflicts → triage comments → wait for CI) and escalates any PR that
-  needs three rounds of patching in a single run.
+  Converge every open PR an assignment produced, addressing each Codex comment,
+  merge conflict, and CI failure as a symptom of a deeper issue, not a line-edit.
+  Each round senses the PR through one deterministic command, digests a CI failure
+  in a discarded context so its log never reaches this one, and judges from what
+  comes back; escalates any PR that needs three rounds of patching in a single run.
 ---
 
 # Continue parlay
@@ -21,21 +21,27 @@ Automate the PR babysitting loop so the operator doesn't have to watch it. Drive
 
 An assignment routinely produces more than one PR: a substantive change in one repository plus the mechanical change a contract forces in a peer repository, each its own PR on its own branch. This loop converges **every open PR the assignment produced**, not only the one on the current branch, so the operator says it once and has all of them babysat. The common case is still a single PR, and nothing about it changes: the set is simply that one PR.
 
-Converge the PRs one at a time, running the watch loop below against each in turn, and the run exits only once every PR has converged. Sequence rather than interleave them on purpose: the symptom-density stop (Step 7) reads a single PR's patch history, and folding comments from several PRs into one counter would blur the very signal it exists to catch. Each PR's escalation (the three-round symptom stop, an unresolvable conflict, an exogenous CI failure) fires for that PR alone and hands back to the operator with the status of the whole set, so the rest are never dropped in silence.
-
-Two of the three targets read remotely with an explicit `{owner}/{repo}`: Codex comments and reactions, mergeability, and CI status all poll through `gh api`/`gh` with no checkout. Only *acting* (resolving a conflict, pushing a fix) needs a PR's branch worktree, so a peer-repo PR that is already green and Codex-clean converges without leaving the current worktree, while one that needs a fix is worked from a checkout of its own branch in its own repository. How a Bob arrives at that checkout is substrate, outside this skill; the contract is that each PR's git-level steps below run against that PR's own branch.
+Converge the PRs one at a time, running the watch loop below against each in turn, and the run exits only once every PR has converged. Sequence rather than interleave them on purpose: the symptom-density stop reads a single PR's patch history, and folding rounds from several PRs into one ledger would blur the very signal it exists to catch. Each PR keeps its own ledger on disk and its own escalation; an escalation fires for that PR alone and hands back to the operator with the status of the whole set, so the rest are never dropped in silence.
 
 **This loop does not merge any PR.** The merge is the operator's call after they review. Only bot-authored PRs auto-merge, where the tenant has configured that; nothing the loop does merges code to `main`. The point of the loop is to spare the operator's attention on defective code by converging on Codex before the PR reaches their review queue.
 
-**When to use:** after a PR is open that Codex will review. A procedure reaches here through `_tender`, which invokes `/parlay` automatically at the end of its CI-green gate with the single PR it just opened, so the default path is automatic; direct invocation of `/parlay` (naming several PRs) is how an assignment's coordinated PRs get babysat together, and also how a stalled parlay is resumed after manual intervention or a bypassed auto-handoff. Run each PR's git-level steps in that PR's branch worktree. A PR converges when a full polling interval elapses with no unresolved Codex comments AND it is mergeable AND its CI is green; the run exits when every PR has converged.
+**When to use:** after a PR is open that Codex will review. A procedure reaches here through `_tender`, which invokes `/parlay` automatically at the end of its CI-green gate with the single PR it just opened, so the default path is automatic; direct invocation of `/parlay` (naming several PRs) is how an assignment's coordinated PRs get babysat together, and also how a stalled parlay is resumed after manual intervention or a bypassed auto-handoff. Run each PR's git-level steps in that PR's branch worktree.
 
-**Short-circuit:** a `+1` reaction from Codex on a PR body is Codex's thumbs-up against the SHA it reviewed. When the reaction's timestamp is later than that PR's HEAD commit timestamp, Codex has cleared the current code, so that PR has converged, regardless of `mergeStateStatus` (which may still be `BLOCKED` for unrelated reasons like missing the operator's own review); stop watching it and move to the next. A `+1` from *before* the latest push is stale and must be ignored, because Codex hasn't seen the new commits.
+## The shape of a round, and why it is shaped this way
+
+The loop runs long, and its old failure was not in any one decision but in what each round left behind: every pass appended a CI log, a comment thread, and a subagent's report to a context that was never shed and was re-read in full on every later turn. The bill was that accumulation, not the work. So the round is cut to keep this context small, and the cut is worth understanding because it tells you where each piece of the work belongs.
+
+- **`vv parlay-watch` senses; it does not decide.** It waits for Codex, then reads the PR's facts and reports only what you need to act: the convergence verdict, how many comments are open and how many arrived this pass, CI status with a handle to its log, mergeability, the reviewer's disposition on the head, and the running counts. It writes the open comments verbatim to a file — every inline finding, and any finding Codex left in a review body rather than an inline comment — and reports the counts, never the bodies, so a comment's text crosses into this context only when you read that file to triage it. The raw CI log it does not fetch at all.
+- **The bookkeeping runs from your primary worktree.** `vv parlay-watch` and `vv parlay-record` sense the PR remotely (through `--repo`) and keep the ledger under this worktree's `.scratch`; they need no checkout. Run them from the worktree `/parlay` was invoked in, so the ledger has one stable home across the run. Only a PR's git-level steps (resolving a conflict, pushing a fix) need that PR's branch worktree; reaching into a peer repository's checkout to commit there does not move where the bookkeeping lives.
+- **The digest crushes the CI log in a context that is then discarded.** A failed run's log is the largest thing the loop ever touches, and it must never enter this context. A subagent fetches it through the handle, crushes it to a root cause, and returns a few lines; its own context, log and all, is thrown away. It is an anti-corruption layer, not a compressor: it keeps the handle so you can fetch the raw log if its crush is thin, and it may *tag* a suspected flake but never *decides* one.
+- **You judge, from what comes back.** The symptom-vs-line-edit call, the real-vs-invented-case call, the flake-vs-real-failure decision: these are yours and stay here, with the authority to act on them. The machinery hands you small, faithful inputs; it never makes the call.
+- **The ledger lives on disk, not in the prose.** `vv parlay-watch` and `vv parlay-record` keep the round count, the pass count, and the open comments in a file, read fresh each round. That is why the escalation backstop works now where it did not before: the round count is no longer lost in accumulated context, and it is no longer yours to set — `vv parlay-watch` advances it by reading the PR head, so a code-changing round is a fact about a landed commit, not a disposition you record.
 
 ## Inputs
 
-- `prs` (required): one or more PR numbers or URLs. Default: the single PR associated with the current branch (`gh pr view --json number`). The automatic `_tender → /parlay` hand-off always passes exactly one, so the default path is unchanged; the operator names several, or the Carryover carries them, when an assignment produced coordinated PRs.
-- `interval` (optional): seconds to wait between passes. Default **270**. This is an *upper bound*: the wait exits early when Codex leaves a fresh `+1` (see Step 2's smart-wait). The cap sits just under the Anthropic prompt cache's 5-minute TTL so a fall-through wake-up still hits warm cache; 300 would miss. Raise the cap if Codex is slow to respond, since the next natural step is well above 300 (e.g. 1200+): anything between 300 and ~1200 pays the cache miss without amortizing it.
-- `max_iterations` (optional): safety cap. Default **20**. Stop and ask the operator if the loop burns through this many iterations without convergence.
+- `prs` (required): one or more PR numbers or URLs. Default: the single PR on the current branch. The automatic `_tender → /parlay` hand-off passes exactly one; the operator names several, or the Carryover carries them, when an assignment produced coordinated PRs.
+- `interval` (optional): the upper bound, in seconds, on a single `vv parlay-watch` call's wait for Codex, passed through as `--interval`. Default **270**; the wait exits early the moment Codex rules on the head (a `+1` or a review) and the loop re-senses across calls until the reviewer's patience runs out. The cap sits just under the prompt cache's 5-minute TTL so a fall-through wake-up still hits warm cache; 300 would miss, and anything from 300 to ~1200 pays the cache miss without amortizing it.
+- `max_iterations` (optional): the pass cap, passed through as `--max-iterations`. Default **20**. `vv parlay-watch` reports `stop: yes` once the loop reaches it; stop and hand back to the operator when it does.
 
 ## Procedure
 
@@ -47,147 +53,106 @@ Take the set of PRs to converge from the Carryover, or from a direct invocation 
 gh pr view --json number,url,headRefName
 ```
 
-Fail fast if no PR resolves at all: there is nothing to parlay with. Then converge the set one PR at a time: run the watch loop below against each, keying its `gh`/`gh api` calls to that PR's `{owner}/{repo}` and running its git-level steps in that PR's branch worktree. The run exits only once every resolved PR has converged.
+Fail fast if no PR resolves at all: there is nothing to parlay with. Then converge the set one PR at a time: run the watch loop below against each, passing its number and `--repo owner/repo` to every `vv parlay-watch` and `vv parlay-record` call (the `--repo` keys the ledger to that PR's full identity, so peer PRs that happen to share a number do not share state). Run the `vv` commands themselves from this primary worktree; reach into a PR's own branch worktree only for its git-level steps. The run exits only once every resolved PR has converged.
 
 ### 2. Watch loop
 
-Run this loop for one PR: the PR currently being converged from the Step 1 set. Three convergence targets, each checked every pass: Codex comments clean, PR mergeable, CI green. A pass exits successfully only when all three hold. A Codex `+1` reaction on that PR's body short-circuits this PR (see the check below).
+Run this loop for the PR currently being converged. Keep one rule in view from the first pass: a run of individually-legitimate fixes almost always means a design decision introduced the fragility Codex keeps poking at, not that the reviewer found that many independent defects. **This bad decision is often not visible to the agent that authored it, so do not rationalize it away.** The loop hard-stops at three code-changing rounds for exactly that reason; the cheapest move once you sense it is to run the [Repeated-symptom escalation](#repeated-symptom-escalation) early rather than keep patching.
 
-Keep one rule in view from the first pass: a run of individually-legitimate fixes almost always means a design decision introduced the fragility Codex keeps poking at, not that the reviewer found that many independent defects. **This bad decision is often not visible to the agent that authored it, so do not rationalize this away!** The loop hard-stops at three code-changing rounds (Step 7) for exactly that reason; the cheapest move once you sense it is to stop and run the [Repeated-symptom escalation](#repeated-symptom-escalation) early (its Five Whys first, then the synthesis written from the root cause) rather than keep patching.
+Each pass:
 
-Repeat for up to `max_iterations` rounds:
+1. **Sense.** Run the watch command, which waits for Codex to rule on the head (exiting early the moment it does, or once the wait runs out of patience) and then reports the round's facts. Give it a timeout above the interval so the wait can run to completion:
 
-1. **Check for Codex sign-off.** Before sleeping, compare the latest Codex `+1` reaction timestamp against the PR's HEAD commit timestamp:
    ```bash
-   head_sha=$(gh pr view {pr} --json headRefOid -q .headRefOid)
-   head_date=$(gh api "repos/{owner}/{repo}/commits/$head_sha" -q .commit.committer.date)
-   plus_one_date=$(gh api "repos/{owner}/{repo}/issues/{pr}/reactions" \
-     --jq '[.[] | select(.user.login | test("codex"; "i")) | select(.content == "+1") | .created_at] | max // empty')
+   vv parlay-watch <pr> --interval 270 --max-iterations 20   # add --repo owner/repo for a peer PR
    ```
-   Short-circuit only if `$plus_one_date` is non-empty AND later than `$head_date`. That means Codex left its thumbs-up *after* the current HEAD was pushed, so it has seen this code and cleared it. Exit successfully immediately; do not sleep, do not wait for CI, do not wait for `mergeStateStatus` to flip. Record the convergence path as **Codex sign-off** for the Report (Step 3); this is the only path that may be reported as a Codex `+1` clearance, because it is the only one that matched a qualifying reaction.
 
-   A `+1` that predates the latest push is stale. Codex hasn't seen the new commits; treat the reaction as absent and fall through to the rest of the loop. If you pushed code yourself (merge-main or Codex-fix commits) earlier in this same run, any pre-existing `+1` has become stale as a result, so continue polling until Codex leaves a new one.
+   It prints `convergence`, `open-comments` (a count and a file path), `new-this-pass`, `ci`, `mergeability`, `reviewer` (the reviewer's disposition on the head: `findings`, `clean`, or `pending`), `rounds`/`escalate`, `passes`/`stop`, and `head`.
 
-   Run this check at the top of every pass, including the first: if Codex had already signed off against the current HEAD before `/parlay` was invoked, the loop should exit without sleeping.
-2. **Smart wait.** Wait up to `interval` seconds, exiting early the moment a fresh Codex `+1` appears. The static `sleep $interval` would force the loop to sit through up to ~4.5 minutes of dead air after Codex had already cleared the SHA; the smart wait short-circuits as soon as the reaction arrives. Implemented as an `until`-loop with a short inner sleep (the harness-supported pattern; bare `sleep 270` is blocked):
-   ```bash
-   deadline=$(($(date +%s) + interval))
-   until \
-       [ "$(date +%s)" -ge "$deadline" ] || \
-       { plus_one=$(gh api "repos/{owner}/{repo}/issues/{pr}/reactions" \
-           --jq '[.[] | select(.user.login | test("codex"; "i")) | select(.content == "+1") | .created_at] | max // empty' 2>/dev/null || true); \
-         [ -n "$plus_one" ] && [ "$plus_one" \> "$head_date" ]; }
-   do
-       sleep 30
-   done
-   ```
-   `$head_date` is the value captured in Step 1; reuse it rather than recomputing per inner pass.
+2. **Branch on the verdict.** The verdict is the single directive, and the escalation overrides a convergence verdict by construction — a PR that looks converged on the very pass its third code-changing round lands still escalates.
+   - `convergence: merged` → the PR was merged out from under the loop (the strongest convergence there is). **This PR has converged via merge.** Record it for the Report and move to the next PR.
+   - `convergence: closed` → the PR was closed without merging. The loop has nothing left to converge: stop and hand back to the operator with the PR's state, the same severity as the pass cap.
+   - `convergence: escalate` → three code-changing rounds have landed. Route to [Repeated-symptom escalation](#repeated-symptom-escalation) now, before the steps below and regardless of CI, mergeability, or the reviewer. The watch reports this the moment the third round trips, even on an otherwise green and clean pass, so a converged-looking PR cannot carry the loop past the stop. It is never yours to waive, in its open form or its quiet one (judging the findings independent and pressing on); the section says why.
+   - `convergence: signed-off` → Codex left a `+1` current to this head; it has seen this code and cleared it. The sign-off is an accelerator, not the only path: it lets a settled PR converge without waiting the patience window out. **This PR has converged via Codex sign-off.** Record it for the Report and move to the next PR.
+   - `convergence: steady-state` → nothing open, mergeable, and green, and the reviewer has settled on this head without a fresh sign-off: Codex reviewed this commit and every comment it left is disposed of, or the wait for a review has run out of patience and its silence reads as a skip. **This PR has converged via steady state.** Record it for the Report and move to the next PR.
+   - `convergence: keep-going` → there is work, or Codex has not yet ruled on the current head and the wait for its review still has patience. If `stop: yes`, the pass cap is reached without convergence: stop and hand back to the operator with the current `ci`, `mergeability`, and open-comment state, the same severity as an escalation. Otherwise do the steps below and loop back to step 1; when the only thing outstanding is Codex's review of the head, the steps are no-ops and the loop simply re-senses, waiting for it — an empty comment queue is not convergence until the reviewer has weighed in on this code or the wait for it has run out.
 
-   On exit, fall through to Step 3; the next pass's Step 1 will re-detect the `+1` and short-circuit via the existing logic. Cache warmth is preserved by construction: the short-circuit only ever exits *before* the `interval` cap, so the wake-up is sooner than 270s and the cache stays warm; the slow path (no `+1`, fall through to the cap) falls at exactly the pre-change timing. A transient `gh api` failure during the wait is swallowed (`|| true`); unknown state means "keep polling." The 30s inner cadence sits well under GitHub's 5000/hr authenticated rate limit.
+3. **Resolve a conflict, if any.** When `mergeability: conflicting`, resolve it before anything else (see [Resolving conflicts](#resolving-conflicts)). A clean resolution commits a merge and pushes; the next pass's sense waits out the interval and re-reads CI for the new HEAD, so there is no separate CI gate to run here. A conflict you cannot resolve with confidence escalates, the same severity as the pass cap.
 
-   The watch surface is intentionally narrow: only the `+1` reaction. New Codex review comments and `mergeable: CONFLICTING` flips are still detected, but at the next pass's mergeability/comment-triage steps rather than mid-wait, because neither is latency-critical the way the `+1` short-circuit is.
-3. **Mergeability check.** Cheap poll:
-   ```bash
-   gh pr view --json mergeable,mergeStateStatus
-   ```
-   - `mergeable: MERGEABLE` → proceed.
-   - `mergeable: CONFLICTING` / `mergeStateStatus: DIRTY` → resolve conflicts (see [Resolving conflicts](#resolving-conflicts)). If conflicts resolve cleanly, commit, push, and wait for CI (see [Active CI gate](#active-ci-gate)) before moving on to Codex triage.
-   - `mergeable: null` → GitHub is still computing. Treat as unknown, skip the merge step this pass, re-check next pass.
-4. **Fetch Codex comments** newer than the previous round's high-water mark. Include both the PR conversation thread and line-level review comments:
-   ```bash
-   gh api "repos/{owner}/{repo}/issues/{pr}/comments"
-   gh api "repos/{owner}/{repo}/pulls/{pr}/comments"
-   ```
-   Filter to comments authored by Codex (user login contains `codex` or `chatgpt-codex`).
-5. **Triage each new comment.** For each one:
-   - Read the full comment body and any cited code.
-   - **First, ask whether the case is real.** Codex will sometimes flag a concern that only matters for a case Vaudeville does not have: handling a symlink in a PR whose whole job is to *delete* one, guarding an input the intended use cannot produce, building for a configuration the design rules out. When the suggestion serves a hypothetical rather than Vaudeville as it is actually intended to be used, the disposition is a **reasoned rejection**: reply explaining why the case does not apply, and change no code. This is not the symptom rule below in smaller form; that one still builds a better something, whereas here the right amount to build is *nothing*. Hold the line tightly: reject the invented case, never a real defect whose fix is merely inconvenient. If you cannot name the concrete case the comment assumes and say why the intended use never reaches it, it is a real finding, so treat it as one.
-   - **Otherwise, treat the comment as a symptom, not a spec.** Ask: what underlying problem would make a reviewer raise this? If Codex flagged a missing null-check, the fix is usually not "add a null check"; it is "remove the code path that can be null, or make the invariant visible." Do the more durable fix when there is one.
-   - Make the repair.
-   - Reply to the comment with the disposition: what you changed and why the underlying problem is now gone, or (for a reasoned rejection or any other disagreement) the reasoning for changing no code. `gh api -X POST` against the comment thread.
-6. **If any code changed**, commit and push using plain git, as an appended commit, never an amend or force-push over the prior one; `_tender`'s [Revising a tendered PR](../_tender/SKILL.md#revising-a-tendered-pr) spells out why. Stage tracked edits and any new files alike, since a fix that adds a regression test or helper must not be left half-committed; `git add -u` would push an incomplete fix:
+4. **Digest a CI failure, if any.** When `ci: red`, spawn the [digest subagent](#the-digest-subagent) on the run handle the sense reported. It returns a crushed root cause (and may tag a suspected flake); the raw log never enters this context. Then **you decide**:
+   - A real failure your change caused → fix it with the same symptom-vs-root-cause lens you apply to comments, then continue to step 6.
+   - A failure you judge exogenous (a flake the digest tagged and you agree is infra, an area your diff never touched, anything you cannot confidently attribute to your change) → **stop and escalate.** Hand back to the operator with the run handle and the digest's root cause. Do not retry, do not paper over. The test is: can you name the file or module your change touched that the failing check exercises? If you are guessing, it is exogenous.
+
+5. **Triage the open comments, if any.** When `open-comments` is above zero, read that file directly — it holds, verbatim, every reviewer comment not yet disposed of (inline findings and any finding Codex left in a review body), re-rendered whole each pass so handling a conflict or CI failure first never loses one. For each comment, settle its disposition and the wording you will reply with; the reply is posted when you record the comment in step 6, so deciding it is part of triage:
+   - **First, ask whether the case is real.** Codex sometimes flags a concern that only matters for a case Vaudeville does not have: guarding an input the intended use cannot produce, handling a configuration the design rules out. When the suggestion serves a hypothetical rather than Vaudeville as it is actually intended to be used, the disposition is a **reasoned rejection**: change no code, and the reply explains why the case does not apply. Hold the line tightly: reject the invented case, never a real defect whose fix is merely inconvenient. If you cannot name the concrete case the comment assumes and say why the intended use never reaches it, it is a real finding; treat it as one.
+   - **Otherwise, treat the comment as a symptom, not a spec.** Ask what underlying problem would make a reviewer raise this, and do the more durable fix when there is one (see [Symptom vs. line-edit](#symptom-vs-line-edit)); the reply names what you changed and why the underlying problem is gone.
+
+6. **Commit, push, and record each disposition with its reply.** If any code changed, commit and push with plain git as an appended commit, never an amend or force-push over the prior one (`_tender`'s [Revising a tendered PR](../_tender/SKILL.md#revising-a-tendered-pr) spells out why). Stage tracked edits and new files alike, since a fix that adds a regression test must not be left half-committed:
+
    ```bash
    git add -A
-   git commit -m "$(cat <<'EOF'
-   <TICKET>: Address Codex review
-
-   Co-Authored-By: Claude <noreply@anthropic.com>
-   EOF
-   )"
+   git commit -m "<TICKET>: Address Codex review"
    git push
    ```
-   Use the Task ID from the branch name or PR title. Then wait for CI (see [Active CI gate](#active-ci-gate)). Once CI returns green, increment the *code-changing iteration counter* for this run.
-7. **Symptom-density check.** If the code-changing iteration counter has reached **3**, route to [Repeated-symptom escalation](#repeated-symptom-escalation); do not continue to the convergence check this pass. Three rounds of correct-looking patches in a single run is the signal that what's being patched is downstream of a deeper misframing; `max_iterations` catches the opposite failure (loop spinning forever), this trip catches succeeding-but-missing-the-point. This stop is mandatory unless the operator has _explicitly_ waived it. It is _never_ the agent's to waive; you **must** assume that the problems are connected, even if the cause is not obvious to you, and surface three consecutive failures to the operator.
-8. **Convergence check.** Before checking, verify that the current time is at least `interval` seconds after `$head_date`; if not, the smart wait has not completed, so continue rather than exit. This PR has converged iff all three hold: no new Codex comments this round AND the latest mergeability check was `MERGEABLE` AND the latest CI run was green. Otherwise continue the loop for this PR. Record the convergence path as **steady-state convergence** for the Report, because the PR settled without a Codex sign-off, so none may be claimed for this exit. When this PR has converged, move to the next PR in the set; the run as a whole exits only once every PR has converged.
+
+   Then record each comment you disposed of, one command per comment, which posts your reply to it and clears it from the open queue in a single act:
+
+   ```bash
+   vv parlay-record <pr> <comment-id> --reply "<what changed and why, or the reasoning for changing no code>"   # add --repo for a peer PR
+   ```
+
+   Recording and replying are one command on purpose. The reply used to be a separate manual `gh` post beside the `vv parlay-record` that recorded the disposition, and an unenforced manual step is the one that gets dropped — the dropped-reply regression this fold closes. So there is no recording without replying: the post runs first, and only a posted reply clears the comment. The reply threads under an inline comment, or lands as a new PR comment for a conversation comment or a review-body finding. Record every comment you disposed of, a fix and a reasoned rejection alike; `vv parlay-record` reports what is now addressed and what is still open. It does not touch the escalation count, and no flag does: a round counts toward the three-round stop only when it landed a commit, which the next sense reads off the moved PR head. A round of only reasoned rejections pushes nothing, so its head holds and it never counts — automatically, with nothing for you to assert. The next sense reports `convergence: escalate` once that landed commit is the third; heeding it is step 2, not a step of its own.
 
 ### 3. Report
 
 On exit, surface one entry per PR in the set, and, when the set held more than one, a one-line roll-up of how many converged. For each PR:
-- The convergence path the loop actually fired on: **Codex sign-off** (Step 1 matched a qualifying `+1` newer than HEAD) or **steady-state convergence** (Step 8: no new Codex comments, mergeable, CI green). Report the path recorded at the branch the loop took, not the one that comes to mind, and never assert a Codex sign-off the Step 1 check did not match. A PR with no Codex configured can only converge via steady state.
-- Iterations run.
-- Number of Codex comments addressed.
-- Any comments you disagreed with and replied to without changing code.
+- The convergence path the loop actually fired on: **merge** (`convergence: merged`), **Codex sign-off** (`convergence: signed-off`), or **steady-state convergence** (`convergence: steady-state`). Report the path the loop took, not the one that comes to mind, and never assert a sign-off the verdict did not report. A PR that Codex never reviews (it occasionally skips one, more often a doc-only change) converges via steady state once the wait for a review times out.
+- Rounds and passes run (from the last sense's report).
+- Number of Codex comments addressed, and any you disagreed with and replied to without changing code.
 - Merge-main commits made (if any) and whether the PR is now mergeable.
 - Final CI status: green, or red with the reason for escalation.
 - The PR URL.
 
+## The digest subagent
+
+When CI is red, spawn a subagent (the Task tool) whose context is discarded after it returns, so the raw log it reads never enters this one. Give it the run handle and repository the sense reported, and this prompt:
+
+> You are a digest subagent for a PR convergence loop. Your context is thrown away after you return; only your final message crosses back, so it must be small and it must *be* the digest, not a report about your work.
+>
+> CI run `<handle>` for `<owner/repo>` has failed. Do this and nothing else:
+>
+> 1. Fetch the failed log: `gh run view <handle> --repo <owner/repo> --log-failed`.
+> 2. Crush it to the root cause: name the failing job, step, or test, and quote the few lines that show the actual error — the assertion, the last frame of the traceback, the type error. Cut everything else: setup output, passing steps, timestamps, noise.
+> 3. Keep the handle: end with `raw log: run <handle>` so the judge can fetch the full log if your crush is thin. You are an anti-corruption layer, not a destroyer of evidence — if the failure is ambiguous or has no single root cause, say so and keep more of the log rather than guess.
+> 4. You **may** tag the failure `SUSPECTED FLAKE: <why>` if it looks like infrastructure (a network blip, a runner error, a timeout unrelated to the diff). You **must not** decide it; the judge decides.
+>
+> Return only the crushed root cause, the handle, and the optional flake tag — a few lines. Do not fix, reply, or push anything: you sense and crush; the judge decides and acts.
+
+You read the few lines it returns and decide, in step 4 of the loop. If its crush is too thin to decide on, fetch the raw log yourself through the handle — that is what the handle is for — but do so knowing the log lands in this context, so reach for it only when the crush genuinely will not serve.
+
 ## Resolving conflicts
 
-When `gh pr view` reports `CONFLICTING`:
+When the sense reports `mergeability: conflicting`:
 
 ```bash
 git fetch origin main
 git merge origin/main
 ```
 
-**Resolve by merging, never by rebasing.** Rebasing onto `main` rewrites the branch's already-pushed history, which [Revising a tendered PR](../_tender/SKILL.md#revising-a-tendered-pr) reserves for the harm-is-the-history case, not for recording a conflict resolution. Merge creates a merge commit, keeps history append-only, and pushes without a force.
+**Resolve by merging, never by rebasing.** Rebasing onto `main` rewrites already-pushed history, which [Revising a tendered PR](../_tender/SKILL.md#revising-a-tendered-pr) reserves for the harm-is-the-history case, not for recording a conflict resolution. Merge creates a merge commit, keeps history append-only, and pushes without a force.
 
-If the merge is clean (fast-forward or auto-merge), git has already created the merge commit, so push it:
+If the merge is clean, git has already created the merge commit; push it. If there are conflicts, resolve them with the same symptom-vs-line-edit scrutiny you apply to comments, carrying two questions through every conflict:
 
-```bash
-git push
-```
-
-If there are conflicts, resolve them with the same symptom-vs-line-edit scrutiny you apply to Codex comments. Two questions to carry through every conflict:
-
-1. **Is this a textual merge, or did `main` invalidate the premise of this PR?** If a refactor on `main` changes the shape of code this PR depends on, the "resolution" may not be merging two diffs; it may be re-implementing the PR's change on top of the new shape. Don't paper over.
+1. **Is this a textual merge, or did `main` invalidate the premise of this PR?** If a refactor on `main` changes the shape of code this PR depends on, the resolution may not be merging two diffs; it may be re-implementing the PR's change on top of the new shape. Don't paper over.
 2. **Would the merged result silently revert either side's intent?** If yes, stop; the right call is probably not a merge-time fix.
 
-If you can resolve with confidence, `git add` the resolved files, commit, push, and wait for CI.
-
-If you cannot resolve with confidence (the diff touches code whose intent is unclear from the diff alone, the resolution would silently revert either side's changes, or `main` has invalidated the PR's premise), abort the merge and escalate:
+If you can resolve with confidence, `git add` the resolved files, commit, and push; the next sense re-reads CI for the merge commit. If you cannot (the diff touches code whose intent is unclear, the resolution would silently revert either side, or `main` has invalidated the PR's premise), abort and escalate:
 
 ```bash
 git merge --abort
 ```
 
-Treat this with the same severity as `max_iterations` reached: stop the loop, hand back to the operator with the list of conflicted files and what made the resolution unclear.
-
-## Active CI gate
-
-After any push (whether a merge-main commit or a Codex-fix commit) wait for the CI run **for the commit you just pushed** before moving on. Key the poll off the pushed SHA, not the branch: filtering only by `--branch ... --limit 1` races, because `gh run list` can return a previous run before the new push's workflow has been enqueued, which makes the loop treat a stale green as current.
-
-Capture the pushed SHA immediately after push, and poll the workflow-runs endpoint for that commit. (`gh pr checks` would be simpler but fails under the current token scope.)
-
-```bash
-git push
-pushed_sha=$(git rev-parse HEAD)
-
-gh run list --workflow=ci.yml --commit "$pushed_sha" --limit 1 \
-  --json databaseId,status,conclusion,url
-```
-
-Interpret the result:
-
-- **Empty `[]`** → GitHub has not enqueued the workflow for this commit yet. Wait a few seconds and re-poll. Empty is not green.
-- **`status` anything other than `completed`** (e.g. `queued`, `in_progress`, `requested`, `waiting`, `pending`) → the run is still going; keep polling until it completes. `conclusion` is `null` until then, so do not read it yet.
-- **`status: completed`, `conclusion: success`** → proceed.
-- **`status: completed`, `conclusion: failure`** and the failure is a plausible direct consequence of the change you just pushed → fetch logs with `gh run view <databaseId> --log-failed`, diagnose, fix (same symptom-vs-root-cause lens as Codex), and push again. This re-enters the CI wait for the new commit.
-- **`status: completed`, `conclusion: failure`** and the failure is exogenous (flaky test, infra blip, an area you did not touch, or you cannot confidently attribute it to your change) **stop and escalate**. Same severity as `max_iterations` reached. Hand back to the operator with the run URL and the log excerpt, do not retry, do not paper over.
-
-The test for "plausible direct consequence" is: can you name the file or module your change touched that the failing test exercises? If yes, own it. If you're guessing, it's exogenous, so escalate.
-
-When observing CI state at loop entry without a fresh push (e.g., to decide whether the branch is already green), query the same way (`--commit $(git rev-parse HEAD)`) so the key is always the specific commit, never the branch.
+Treat this with the same severity as the pass cap: stop the loop, hand back to the operator with the conflicted files and what made the resolution unclear. A clean merge-main resolution lands a commit, so the next sense reads the moved head and counts it as a code-changing round; there is no `vv parlay-record` for it, since it disposes of no comment, and the moved head is the whole signal. Counting it is deliberate: a run that needs three merge resolutions in one pass earns the operator's eyes as much as three rounds of Codex fixes, and over-counting is the safe error — it surfaces a run for a look where under-counting would let a real escalation slip.
 
 ## Symptom vs. line-edit
 
@@ -200,40 +165,37 @@ Concrete heuristics:
 - **"Consider renaming X"** → if the name is wrong, other call sites are probably confused too; rename everywhere and update docs.
 - **"Add a comment explaining Y"** → usually the code needs to be rewritten so the behavior is self-evident.
 
-If the symptom-level fix is genuinely the right call (e.g., a true off-by-one, a typo, a factual error in docs), do it and move on. The heuristic is: "before I apply the exact change Codex suggests, can I describe a code shape where this comment would never have been written?"
-
-That question hunts for a *better fix*; it must not become a licence to *invent* one. Sometimes the only code shape in which the comment would never have been written is one where Vaudeville handles a case it does not actually have; then the comment is guarding a hypothetical, and the disposition is the reasoned rejection from Step 5, not a build of any size.
+If the symptom-level fix is genuinely the right call (a true off-by-one, a typo, a factual error in docs), do it and move on. The heuristic is: "before I apply the exact change Codex suggests, can I describe a code shape where this comment would never have been written?" That question hunts for a *better fix*; it must not become a licence to *invent* one. Sometimes the only code shape in which the comment would never have been written is one where Vaudeville handles a case it does not actually have; then the comment is guarding a hypothetical, and the disposition is the reasoned rejection from step 5, not a build of any size.
 
 ## Repeated-symptom escalation
 
-When the code-changing iteration counter reaches 3 (Step 7 of the watch loop routes here), stop the loop. This is a failure of a different shape than `max_iterations`: `max_iterations` catches "the loop has been spinning forever"; this trip catches the opposite, where each round is *succeeding* at addressing the comments Codex left, but the volume of correct-looking patches in a single run is the signal that what's being patched is downstream of a frame the reviewer was structurally unable to see.
+Three code-changing rounds in one run is a hard stop: the run does not go forward from here until the operator answers. It is not a message you post and then keep working past, and it is not the agent's to waive — the loop halts at the trip and stays halted until the operator says keep going, redesign, or close. Your own renewed conviction does not lift it; only the operator's word does.
 
-Codex catches symptom-level errors well and conceptual misframings poorly. After three rounds of patching, the cheapest way to find the misframing is to stop ratcheting forward and step back across the whole run.
+The reason the stop is the operator's and not yours is the one thing this situation reliably hides. Codex catches symptom-level errors well and conceptual misframings poorly, so a run of correct-looking patches is the signal that what you are patching sits downstream of a frame the reviewer could not see — a frame you authored and still cannot see, or there would not be three rounds of it. At the trip you cannot tell your own fluency from the truth, and that is exactly why the call the trip turns on — were these findings independent, or symptoms of one misframing — is not yours to make. The better your case for "independent, keep going," the more precisely you are standing where the stop exists to catch you: that case is what the situation manufactures. The moment you find yourself composing the reason you need not surface, the composing is the signal that you must.
 
-At the trip:
+So do not read this rule for its spirit, and do not litigate whether this "really" amounts to three rounds — to interpret the stop is to exercise the very judgment it withdraws. Where it is unclear, it counts, and you stop.
+
+At the trip, halt the loop and produce the following — for the operator to decide on, never to clear yourself — then surface all of it and wait:
 
 1. **Run a Five Whys on the symptom density.** Before you write any synthesis, and before anything reaches the operator, interrogate the symptom density itself: ask why this run needed three rounds of correct-looking fixes, take that answer and ask why of *it*, and repeat (each answer becoming the next question) until the chain bottoms out in a root cause that is mechanical, a property of the code or the design, rather than narrative. A single question answered once is not a Five Whys: "what frame would have made these comments unnecessary?" is answered fluently by the very agent whose framing produced the defects, and a self-flattering answer that recasts the symptoms as a single benign frame passes for a root cause without being one. The iterative why-of-the-why is the forcing function that blocks that one-shot rationalization. **This interrogation is mandatory; it is not yours to skip or to waive, nor to collapse into a single confident answer**, the same standing as the trip that routed you here. Run it first, because a synthesis written before it becomes the conclusion the whys are then bent to justify. Expect the root cause to be uncomfortable: a genuine one routinely exposes a defect already pushed that the reviewer never caught, which is the whole reason three rounds tripped the stop.
 
-2. **Synthesize across the run, from the root cause.** Re-read every Codex comment from this parlay's iterations and write the synthesis *from* the root cause the Five Whys reached: name what the comments are symptoms of, grounded in that root cause rather than in a fresh open question. The synthesis carries the root cause forward, so the PR record and the operator see the interrogation's result and not merely its conclusion.
+2. **Synthesize across the run, from the root cause.** Re-read every Codex comment from this parlay's iterations and write the synthesis *from* the root cause the Five Whys reached: name what the comments are symptoms of, grounded in that root cause rather than in a fresh open question. The synthesis carries the root cause forward, so the operator sees the interrogation's result and not merely its conclusion.
 
-3. **Close the PR.** Post the synthesis as the closing comment so the PR's record carries the reason:
-   ```bash
-   gh pr close {pr} --comment "<synthesis>"
-   ```
-   The PR is the artifact that turned out to be wrong; the assignment and the Bob remain. The same Bob, with the accumulated knowledge of what didn't work, is usually best-positioned to author the next attempt.
-
-4. **Recommend a course of action.** Weigh in with one and argue for it, following from the root cause the Five Whys reached; the Bob's read of what to do next is the most valuable input the operator has at this point. The skill does not commit you to any specific shape; the menu below is illustrative and incomplete:
+3. **Recommend a course, and hand back.** Weigh in with one course and argue for it from the root cause the Five Whys reached; the Bob's read of what to do next is the most valuable input the operator has here. The menu is illustrative and incomplete:
    - Implement the same concept more carefully on a fresh branch.
    - Redesign the mechanism but retain the overall solution.
    - Revisit the assignment; its framing may be the source of the misdirection.
    - File a dependent Premise and return the current one.
+   - Close the PR and reattempt — the same Bob, carrying forward what didn't work, is usually best-positioned to author the next attempt.
    - Something the menu doesn't cover.
 
-5. **Hand back to the operator.** Surface the synthesis, the recommendation, the menu, and the closed PR's URL. Wait. The corrective action is for the operator and the Bob to resolve together; the skill does not script it.
+   Surface the synthesis, the recommendation, the menu, and the PR's current state, then wait. The corrective action is the operator's to choose and the two of you to resolve together; the loop does not script it, does not close the PR on its own, and does not resume on anything but the operator's explicit answer.
+
+   When that answer is keep going, enact it with `vv parlay-waive <pr>` (add `--repo owner/repo` for a peer PR). The waiver is the operator's; the command only carries out their explicit word, never your own renewed conviction. It lifts the escalation while leaving the round count standing, so the next sense reports the real convergence verdict again and the loop resumes at step 1 — and a third code-changing round past the waiver escalates afresh, a louder alarm rather than a clean slate. The other courses exit this loop instead of resuming it: a redesign, a close, or a returned assignment takes no waiver.
 
 ## On failure
 
 - **Conflict cannot be resolved with confidence** → `git merge --abort`, stop, hand back to the operator with the list of conflicted files.
-- **CI red from an exogenous failure** → stop, hand back to the operator with the run URL and log excerpt.
-- **`max_iterations` reached** → stop and hand back to the operator with a summary of outstanding comments, merge state, and CI state.
+- **CI red from a failure you judge exogenous** → stop, hand back to the operator with the run handle and the digest's root cause.
+- **Pass cap reached (`stop: yes`)** → stop and hand back to the operator with a summary of outstanding comments, merge state, and CI state.
 - **Commit or push fails** → do not retry blindly. Investigate, fix, then resume.

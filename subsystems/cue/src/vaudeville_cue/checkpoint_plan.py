@@ -13,7 +13,7 @@ SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 
 CHECKPOINT_REFUSED_EXIT = 2
 
-_DRIVE_SUBCOMMAND = "checkpoint-drive"
+_RESEAT_VERB = "reseat"
 
 TRANSCRIPT_UNRESOLVED = (
     "this session's transcript could not be resolved "
@@ -32,7 +32,7 @@ class CheckpointRefusal:
 class CheckpointPlan:
     writes: tuple[tuple[Path, str], ...]
     launch: tuple[str, ...]
-    drive_log: Path
+    reseat_log: Path
 
 
 def plan_checkpoint(
@@ -43,13 +43,12 @@ def plan_checkpoint(
     deployed_skills: frozenset[str] | set[str],
     layout: CheckpointLayout,
     pane: str,
-    transcript_dir: Path,
 ) -> CheckpointRefusal | CheckpointPlan:
     if continuation is not None and continuation not in deployed_skills:
         return CheckpointRefusal(
-            f"continuation skill /{continuation} is not deployed; a /clear now would strand "
-            "this Bob in a cleared session with no way back. Redeploy the scaffold so the "
-            "skill resolves, then retry."
+            f"continuation skill /{continuation} is not deployed; reseating now would strand "
+            "this Bob in a fresh session whose Resume Brief names a skill that won't resolve. "
+            "Redeploy the scaffold so the skill resolves, then retry."
         )
     if sections is None:
         return CheckpointRefusal(TRANSCRIPT_UNRESOLVED)
@@ -64,18 +63,21 @@ def plan_checkpoint(
             (layout.carryover, carryover),
             (layout.resume_brief, resume_brief(render(sections), carryover, continuation)),
         ),
-        # Re-invoke the entry point that's running (sys.argv[0]) with the driver
-        # subcommand, not `python -m vaudeville_cue...`: a fresh `-m` child does
-        # not go through the shiv zipapp's bootstrap, so under the packaged build the
-        # package is not importable and the detached driver dies before /clear. Re-
-        # entering sys.argv[0] resolves the package the same way the running command did.
+        # The detached handoff is bobiverse's `reseat` primitive: it replaces the
+        # Bob's pane session in place, seeding the fresh session with the Resume Brief as
+        # its born-grounded first turn. The session is replaced in one act, with nothing
+        # to detect or observe. cue passes only the pane and the brief path; the launch
+        # knowledge (model, remote-control, autonomy, the foundation it drops) is
+        # bobiverse's alone. Re-invoke the running entry point (sys.argv[0]), not
+        # `python -m`: a fresh `-m` child misses the shiv zipapp's bootstrap and dies
+        # before reseating; sys.argv[0] resolves the assembled `vv` facade the way the
+        # running command did, and the facade carries the verb.
         launch=(
             sys.executable,
             sys.argv[0],
-            _DRIVE_SUBCOMMAND,
+            _RESEAT_VERB,
             pane,
-            str(transcript_dir),
             str(layout.resume_brief),
         ),
-        drive_log=layout.drive_log,
+        reseat_log=layout.reseat_log,
     )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Annotated
 
 import typer
@@ -24,6 +25,7 @@ from vaudeville_coordinator import (
     available,
     command_cli,
     file_cli,
+    incident_report_cli,
     link_cli,
     resolve_cli,
     return_cli,
@@ -294,6 +296,49 @@ def command_command(
         create_assignment=create_assignment,
         add_depend=add_depend,
         default_component=component_from_cwd,
+    )
+
+
+@app.command(
+    name="incident-report",
+    help=(
+        "File an incident report the operator flagged: an unsigned check-in Command to "
+        "investigate, whose body is a witness account of what went wrong plus a pointer to the "
+        "transcript. Composes the body deterministically (the agent never sees a template) and "
+        "files it under the cwd Component (or --project). No spawn: it waits for the operator's "
+        "sign-off to authorize the investigation. Prints the new Command's idReadable."
+    ),
+)
+def incident_report_command(
+    summary: Annotated[
+        str, typer.Option(help="The incident named flatly as an event, not a lesson or a cause")
+    ],
+    problem: Annotated[
+        str, typer.Option(help="What went wrong, as observed: no root cause, no fix")
+    ],
+    assignment: Annotated[
+        str | None, typer.Option(help="Assignment the incident occurred on, if any")
+    ] = None,
+    session: Annotated[
+        str | None,
+        typer.Option(help="Claude session id, if known: helps locate the transcript"),
+    ] = None,
+    component: ComponentOption = None,
+    dep: Annotated[
+        list[str] | None,
+        typer.Option(help="Depend-on Assignment id; repeatable, one Depend edge per value"),
+    ] = None,
+) -> None:
+    incident_report_cli.incident_report(
+        component or component_from_cwd(),
+        summary,
+        problem,
+        os.getcwd(),
+        assignment,
+        session,
+        dep or [],
+        create_assignment=create_assignment,
+        add_depend=add_depend,
     )
 
 

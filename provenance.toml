@@ -5,23 +5,23 @@
 
 [contributors.vaudeville-bobiverse]
 remote = "https://github.com/somehowsoftware/vaudeville-bobiverse.git"
-commit = "6396e19b3a8e5d5b38bbb04fb1c5f0a5795d1e1b"
+commit = "c8b8e8ac354f9bb3d9af53eb5a99ae1b79919576"
 
 [contributors.vaudeville-core]
 remote = "https://github.com/somehowsoftware/vaudeville-core.git"
-commit = "cfd54b65bb0e92055bfea70881364bcb00764c14"
+commit = "bfd84727fc407a940a51071a764b57e47982840a"
 
 [contributors.vaudeville-cue]
 remote = "https://github.com/somehowsoftware/vaudeville-cue.git"
-commit = "0f6177cedca06a9a6e5dfed64182b69318fd191d"
+commit = "ee42e9f54fcff3265c96c300d936c3d3f43baf0a"
 
 [contributors.vaudeville-doctrine]
 remote = "https://github.com/somehowsoftware/vaudeville-doctrine.git"
-commit = "4dcdf27a560d4443a32272509aa00e9816962d3c"
+commit = "49a7a454b3c5aa6ec22029ee88fa1d82c57ae511"
 
 [contributors.vaudeville-pm]
 remote = "https://github.com/somehowsoftware/vaudeville-pm.git"
-commit = "be5ef6ebfb56fffa3e6840828927e21107d0a09e"
+commit = "b7e2b237a3c4ae1d62fb7c1546fec4ece69f8b34"
 
 [builder]
 ringmaster = "2026.6.25.1"

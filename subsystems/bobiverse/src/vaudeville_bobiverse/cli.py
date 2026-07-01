@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -9,6 +10,7 @@ from vaudeville_core import component_from_cwd, list_components
 from vaudeville_bobiverse import bob as bob_mod
 from vaudeville_bobiverse import claude_projects, foundation, foundation_verify
 from vaudeville_bobiverse import prime as prime_mod
+from vaudeville_bobiverse import reseat as reseat_mod
 from vaudeville_bobiverse import unclaim as unclaim_mod
 from vaudeville_bobiverse.data_dir import data_dir
 from vaudeville_bobiverse.prime_fanout import prime_report
@@ -38,6 +40,24 @@ def teardown_command(
     ] = None,
 ) -> None:
     run_teardown(worktree_name)
+
+
+@app.command(
+    name="reseat",
+    help=(
+        "Reseat a Bob: replace the pane's claude session in place with a fresh one "
+        "born holding the Resume Brief as its first turn -- same pane, same worktree, "
+        "no Foundation fork. The intra-session sibling of spawn and teardown; cue's "
+        "`vv checkpoint` launches it as the detached handoff that sheds an oversized "
+        "conversation. Refuses before the destructive respawn -- leaving the live "
+        "session untouched -- when the Brief is too large to land or the pane is gone."
+    ),
+)
+def reseat_command(
+    worktree: Annotated[str, typer.Argument(help="Worktree (pane) to reseat.")],
+    brief: Annotated[str, typer.Argument(help="Path to the composed Resume Brief.")],
+) -> None:
+    reseat_mod.reseat(worktree, Path(brief))
 
 
 @app.command(

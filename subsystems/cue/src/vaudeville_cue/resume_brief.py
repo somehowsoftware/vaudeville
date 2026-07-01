@@ -1,24 +1,24 @@
 from __future__ import annotations
 
 # The Brief's opening line, single-sourced so the Digest extraction can recognise a
-# Brief the Checkpoint driver injected (via `workmux send --file`, which arrives as a
-# typed user turn) and refuse to read it back as the operator speaking.
+# Brief that a reseat seeded as the fresh session's born-grounded first turn (it arrives
+# as a typed user turn) and refuse to read it back as the operator speaking.
 RESUME_BRIEF_OPENING = "# Resume Brief: you are a Bob, mid-work, just past a Checkpoint"
 
 _GROUNDING_FRAME = (
     RESUME_BRIEF_OPENING
     + """
 
-Your previous session shed its oversized conversation with /clear. This message
-is the whole handoff. You are not a new agent and this is not a restart: the
-worktree, the branch, and the diff are exactly as you left them; what is gone is
-everything that existed only as talk. Read this Brief top to bottom, in order;
-the order is essential.
+Your previous session was reseated: its oversized conversation shed and this
+fresh session born in its place. This message is the whole handoff. You are not
+a new agent and this is not a restart: the worktree, the branch, and the diff
+are exactly as you left them; what is gone is everything that existed only as
+talk. Read this Brief top to bottom, in order; the order is essential.
 
-A cleared context does not present as ignorance; it presents as fluency. You
-will meet familiar-shaped terms below and feel that you know them. That feeling
-is the failure mode, not evidence against it: before you lean on any doctrine or
-domain term, re-read its definition from its source on disk.
+A freshly grounded context does not present as ignorance; it presents as
+fluency. You will meet familiar-shaped terms below and feel that you know them.
+That feeling is the failure mode, not evidence against it: before you lean on
+any doctrine or domain term, re-read its definition from its source on disk.
 
 ## 1. The operator's turns: the Digest
 
@@ -26,7 +26,7 @@ Ground here first, before your own notes. These are the operator's turns,
 verbatim and in order, extracted mechanically from the session transcripts.
 Nothing here is summary, and nothing here is yours, and that is exactly why it
 governs: your Carryover below and your own memory both came from the context
-that was just cleared, but the operator's words did not. So these turns are the
+that was just shed, but the operator's words did not. So these turns are the
 standing account of what this work is and why. Rebuild your understanding on
 them, and read whatever you find next (a command's output, the code, a file,
 the history) against this account; where what you find fights it, that clash is
@@ -37,7 +37,7 @@ with that session's transcript, and within it each turn headed with the lines it
 spans in that transcript. Where a turn's meaning leans on what surrounded it (a "yes, do
 that" with no antecedent, a reaction to a tool result), follow its line locator
 into the named transcript and read the neighborhood; never fill the gap with
-what is plausible, and never surface one of your own pre-clear replies as though
+what is plausible, and never surface one of your own pre-reseat replies as though
 the operator said it. Read to the end: an early instruction can be revised or
 reversed by a later turn, and the latest turn is the live one.
 
@@ -72,7 +72,7 @@ operator's turns above are still the account: if the first thing you check comes
 back against what they established (the tracker, the code, or the history saying
 otherwise), surface that clash before you act on it, rather than letting the
 fresher reading quietly stand in for the operator's word. And continuing
-grants no new license: the clear changed your context, not your authority. If
+grants no new license: the reseat changed your context, not your authority. If
 the next step is outward or irreversible and the operator's turns did not
 already authorize it, carry the work to that edge, surface, and wait.
 """
@@ -86,7 +86,7 @@ procedure for the work ahead. Invoke the Skill tool with skill `{continuation}`
 now; grounded by this Brief, it picks up mid-stride. As it runs, the operator's
 turns above stay the account: if something you check comes back against what they
 established, surface that clash before acting on it. Continuing grants no new
-license: the clear changed your context, not your authority.
+license: the reseat changed your context, not your authority.
 """
 
 

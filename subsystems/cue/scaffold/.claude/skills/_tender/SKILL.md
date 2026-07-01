@@ -49,9 +49,9 @@ EOF
 git push -u origin "$(git branch --show-current)"
 ```
 
-### 4. Open the PR
+### 4. Open the PR and bring its head under watch
 
-If a PR already exists for the branch, skip to step 5. Otherwise:
+Create the PR if the branch does not already have one:
 
 ```bash
 gh pr create --title "<ASSIGNMENT>: Summary of changes" --body "$(cat <<'EOF'
@@ -65,8 +65,17 @@ Assignment: <ASSIGNMENT>
 
 - [x] CI green locally
 EOF
-)"
+)"   # skip if a PR already exists for the branch
 ```
+
+Then stamp the head under parlay watch from the system clock now, whether the PR is new or already existed:
+
+```bash
+pr=$(gh pr view --json number -q .number)
+vv parlay-begin "$pr"
+```
+
+This records the moment the head came under watch into the on-disk ledger, before `/parlay` checkpoints. A Codex `+1` arriving in the gap between this push and the first post-checkpoint sense is then judged against a clock that has already started, not one that begins after it — so a fast-reviewed PR converges on the sign-off it earned rather than waiting the full patience window out. The stamp lives on disk, so it is inherited through the checkpoint into the watch loop.
 
 ### 5. Verify CI
 

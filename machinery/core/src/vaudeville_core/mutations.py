@@ -164,4 +164,11 @@ def _tracker_project_id(short_name: str, host_config_dir: Path | None = None) ->
 
 
 def _single_enum(name: str, value: str) -> dict[str, Any]:
-    return {"name": name, "$type": "SingleEnumIssueCustomField", "value": {"name": value}}
+    # An empty value clears the field (`value: null`) rather than naming a value `""`,
+    # which YouTrack rejects as a missing enum element. This is how a routeless Manual
+    # files with no Route.
+    return {
+        "name": name,
+        "$type": "SingleEnumIssueCustomField",
+        "value": {"name": value} if value else None,
+    }

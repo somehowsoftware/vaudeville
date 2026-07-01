@@ -12,9 +12,10 @@ def run_plan(plan: CheckpointPlan) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         _write_atomically(path, content)
     # Popen dups the fd into the child, so the parent's copy closes safely after spawn.
-    with plan.drive_log.open("ab") as log:
-        # start_new_session detaches the drive into its own session: it sends the /clear
-        # that wipes this conversation, so it must outlive the process that launched it.
+    with plan.reseat_log.open("ab") as log:
+        # start_new_session detaches the reseat into its own session: it replaces the
+        # pane's session (killing this conversation's process), so it must outlive the
+        # process that launched it.
         subprocess.Popen(  # noqa: S603
             list(plan.launch),
             stdin=subprocess.DEVNULL,

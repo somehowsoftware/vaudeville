@@ -83,7 +83,6 @@ def run_checkpoint(continuation: str | None, worktree_name: str | None, carryove
         deployed_skills=deployed_skills(claude_config.skills_root()),
         layout=layout,
         pane=worktree_name or worktree_root.name,
-        transcript_dir=transcript_dir,
     )
     if isinstance(outcome, CheckpointRefusal):
         print(f"Error: {outcome.message}", file=sys.stderr)

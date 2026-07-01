@@ -23,3 +23,4 @@ skill or a `vv` verb, and the recipe keeps only the judgment that remains.
 - [Language before code](./language-before-code.md): how to land a breaking conceptual change across the constellation without poisoning the shared trust signal.
 - [Sweeping a rename](./sweeping-a-rename.md): how to carry a settled rename across every repository with agents, without fanning out a hundred identical misses.
 - [Driving other Bobs](./driving-bobs.md): launching and puppeteering a second Bob through workmux.
+- [Tuning a prompt](./tuning-a-prompt.md): how to change an agent-facing prompt when reading the words cannot tell you their effect — generate, judge, iterate — told as one worked chain of related interventions that is never done, only good enough for now.

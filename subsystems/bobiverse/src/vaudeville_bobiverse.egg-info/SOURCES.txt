@@ -37,6 +37,7 @@ src/vaudeville_bobiverse/prime_invocations.py
 src/vaudeville_bobiverse/prime_runner.py
 src/vaudeville_bobiverse/prime_store.py
 src/vaudeville_bobiverse/refresh.py
+src/vaudeville_bobiverse/reseat.py
 src/vaudeville_bobiverse/teardown.py
 src/vaudeville_bobiverse/unclaim.py
 src/vaudeville_bobiverse.egg-info/PKG-INFO
@@ -80,6 +81,7 @@ tests/test_prime_invocations.py
 tests/test_prime_runner.py
 tests/test_prime_store.py
 tests/test_refresh.py
+tests/test_reseat.py
 tests/test_smoke.py
 tests/test_spawn_agent.py
 tests/test_spawn_decision.py

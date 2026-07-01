@@ -33,6 +33,5 @@ def stand_up_session(
         projects_root=projects_root,
         data_files_root=data_files_root,
     )
-    workmux.run_workmux(
-        workmux.workmux_invocation(seeded, worktree, prompt_file, agent.propagated_environment())
-    )
+    agent_script = agent.write_agent_script(target, worktree, agent.propagated_environment())
+    workmux.run_workmux(workmux.workmux_invocation(seeded, worktree, prompt_file, agent_script))

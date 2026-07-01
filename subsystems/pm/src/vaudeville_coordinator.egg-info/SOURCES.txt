@@ -13,9 +13,9 @@ scaffold/.claude/skills/command/SKILL.md
 scaffold/.claude/skills/decompose/SKILL.md
 scaffold/.claude/skills/direction/SKILL.md
 scaffold/.claude/skills/groom/SKILL.md
+scaffold/.claude/skills/incident-report/SKILL.md
 scaffold/.claude/skills/manual/SKILL.md
 scaffold/.claude/skills/onward/SKILL.md
-scaffold/.claude/skills/postmortem/SKILL.md
 scaffold/.claude/skills/premise/SKILL.md
 scaffold/.claude/skills/sign-off/SKILL.md
 scaffold/.claude/skills/tangent/SKILL.md
@@ -29,6 +29,8 @@ src/vaudeville_coordinator/cli.py
 src/vaudeville_coordinator/command_cli.py
 src/vaudeville_coordinator/concern_classifier.py
 src/vaudeville_coordinator/file_cli.py
+src/vaudeville_coordinator/incident_report.py
+src/vaudeville_coordinator/incident_report_cli.py
 src/vaudeville_coordinator/link_cli.py
 src/vaudeville_coordinator/operator_cli.py
 src/vaudeville_coordinator/pickable.py
@@ -61,6 +63,8 @@ tests/test_awaiting_sign_off.py
 tests/test_command_cli.py
 tests/test_concern_classifier.py
 tests/test_file_cli.py
+tests/test_incident_report.py
+tests/test_incident_report_cli.py
 tests/test_link_cli.py
 tests/test_pickable.py
 tests/test_pickable_table.py

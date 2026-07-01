@@ -1,6 +1,6 @@
 pydantic>=2
 typer>=0.12
-vaudeville-core>=2026.06.26.1
+vaudeville-core>=2026.07.01.1
 
 [dev]
 pytest>=7.0
