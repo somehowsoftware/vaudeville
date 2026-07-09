@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import sys
 from pathlib import Path
 from typing import NoReturn
@@ -43,6 +44,20 @@ def store_foundation_transcript(
             f"primed transcript for session {session_id} not found under {primed_at}; "
             f"cannot store the Foundation."
         )
+
+
+def discard_reading_scratch(reading: Path, *, projects_root: Path) -> None:
+    # The reading's Claude project dir holds only prime-time scratch: the seeded
+    # Bedrock copy and the forked Foundation transcript. It lives under the config
+    # dir, outside the reading's temp clone, so vaudeville-core's teardown never
+    # reaches it and every fork would otherwise leave an orphan behind. Once the
+    # Foundation is lifted into the store this dir is pure residue, so remove it.
+    # ignore_errors keeps cleanup from ever masking the fork's own outcome, and the
+    # per-reading path means concurrent forks never race over one directory.
+    shutil.rmtree(
+        claude_projects.project_directory(reading, projects_root=projects_root),
+        ignore_errors=True,
+    )
 
 
 def _abort(message: str) -> NoReturn:

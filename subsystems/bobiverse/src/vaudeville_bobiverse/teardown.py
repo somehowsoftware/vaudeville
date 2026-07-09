@@ -43,9 +43,11 @@ def launch_teardown(worktree_name: str | None, archive_root: Path) -> None:
         "scripts/teardown-archive-and-remove.sh"
     )
     with resources.as_file(script_ref) as script_path:
-        args = ["setsid", "nohup", "bash", str(script_path)]
+        args = ["bash", str(script_path)]
         if worktree_name:
             args.append(worktree_name)
+        # This teardown kills the tmux pane of the agent that launched it, so it
+        # must outlive that agent; start_new_session detaches it into its own session.
         # Popen dups the fd into the child, so the parent's copy closes safely after spawn.
         with Path("/tmp/teardown-archive.log").open("ab") as log:
             subprocess.Popen(  # noqa: S603

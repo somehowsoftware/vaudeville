@@ -71,13 +71,14 @@ scan as a backstop. The characteristic agent failure here is to treat the enumer
 checklist as the definition of done; so the gap pass is a required step, not a
 footnote.
 
-## 5. One big mutation at a time
+## 5. Confine the window; publish before others build
 
 Between the rename in step 2 and the last behavioral PR in step 3, the suite is green
-while encoding wrong behavior. Across a federation that trusts green CI as "safe to
-build on," that window is shared: a second concurrent conceptual mutation, or a Bob
-spawned into unrelated work mid-window, reads a lying green. So **only one breaking
-conceptual change is ever in flight across the constellation at a time.** It costs
-parallelism; that is the price of not poisoning the trust signal. Where the window must
-stay open a while, mark the discordant tests (an `xfail`, or a `KNOWN-WRONG` tag
-carrying the reason) so the green reads as provisional, not done.
+while encoding wrong behavior. That window is coherent only for the work that holds it;
+to any other window it is a lying green. So confine it, and gate on publication. Ride
+the change on a [Track](../vocabulary.md#track) so the discord lives on the Track's
+branches and main stays honest for everyone else, and hold the publication gate of
+[signal-side-leverage](../practice/signal-side-leverage.md): the meaning-move must be
+present in main before anything outside the Track builds against it. Where a discordant
+test must sit in a window another reader might meet, mark it (an `xfail`, or a
+`KNOWN-WRONG` tag carrying the reason) so the green reads as provisional, not done.

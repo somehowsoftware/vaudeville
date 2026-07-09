@@ -30,7 +30,7 @@ SPAWN_FLAGS = "--model opus --permission-mode auto --disallowedTools AskUserQues
 # A window `workmux add` creates inherits the tmux server's environment, not the
 # spawning shell's, so these values reach the spawned claude only when the launch
 # script exports them. They matter when a rehearse points the lifecycle at a
-# Staged Scaffold rather than the host install:
+# Rehearsal Installation rather than the host install:
 #   - CLAUDE_CONFIG_DIR: where `claude --resume` looks for the Foundation
 #     transcript, and where it loads skills and hooks from.
 #   - PATH: which `claude`/`vv`/`vv-bob`/`vv-cue`/`vv-pm` and the exit teardown

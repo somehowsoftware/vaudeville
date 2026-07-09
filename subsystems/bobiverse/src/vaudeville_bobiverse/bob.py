@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-import sys
 import tempfile
 import uuid
 from pathlib import Path
 
-from vaudeville_bobiverse import claude_projects, foundation, refresh
+from vaudeville_bobiverse import claude_projects
 from vaudeville_bobiverse.data_dir import data_dir
-from vaudeville_bobiverse.managed_clones import managed_clones
-from vaudeville_bobiverse.spawn import standup, target_repo, trust
-from vaudeville_bobiverse.spawn.decision import SpawnRefusal, spawn_decision
+from vaudeville_bobiverse.spawn import clearing, standup, trust
+from vaudeville_bobiverse.spawn.refusal import Refusal, refuse, refuse_or_clear
 
 ADHOC_NOTE = (
     "You are a Bob, forked ad-hoc into this Component with no Assignment. "
@@ -40,20 +38,15 @@ def fork_adhoc_bob(
     data_files_root: Path,
     projects_root: Path,
     claude_config_file: Path,
-    clones: list[Path],
 ) -> None:
-    # Spawn without the backlog: no preflight gate and no Brief, because no
-    # Assignment drives this Bob. Foundation readiness is still the law, so reuse
-    # spawn's decision rather than re-inline the refusal.
-    target = target_repo.target_repo_for_prefix(prefix)
-    decided = spawn_decision(prefix, foundation.lookup(prefix, data_files_root=data_files_root))
-    if isinstance(decided, SpawnRefusal):
-        print(decided.message, file=sys.stderr)
-        sys.exit(decided.exit_code)
-    refresh.refresh_clones(clones)
+    # No preflight here: preflight weighs an Assignment, and an ad-hoc Bob has none.
+    outcome = refuse_or_clear(clearing.SPAWN_CLEARANCES, clearing.Clearing(prefix, data_files_root))
+    if isinstance(outcome, Refusal):
+        refuse(outcome)
+    ready = outcome.cleared()
     standup.stand_up_session(
-        decided.foundation_session,
-        target=target,
+        ready.foundation_session,
+        target=ready.target,
         worktree=adhoc_worktree_name(prefix, uuid.uuid4().hex[:6]),
         prompt_file=write_adhoc_note(),
         config_file=claude_config_file,
@@ -71,5 +64,4 @@ def bob(prefix: str) -> None:
         data_files_root=data_dir(),
         projects_root=claude_projects.projects_root(),
         claude_config_file=trust.claude_config_file(),
-        clones=managed_clones(),
     )

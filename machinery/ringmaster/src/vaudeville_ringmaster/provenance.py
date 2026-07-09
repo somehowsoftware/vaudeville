@@ -7,8 +7,8 @@ from dataclasses import dataclass
 import vaudeville_install
 
 import vaudeville_ringmaster
-from vaudeville_ringmaster.apply_plan import ApplyPlan
 from vaudeville_ringmaster.carried_set import CarriedSet, carried_set_of
+from vaudeville_ringmaster.manifest import Manifest
 from vaudeville_ringmaster.pin import Pin
 from vaudeville_ringmaster.pinned_set import PinnedSet
 
@@ -27,8 +27,8 @@ class Provenance:
     builder: Builder
 
 
-def provenance_of(pinned_set: PinnedSet, plan: ApplyPlan) -> Provenance:
-    return Provenance(carried=carried_set_of(pinned_set, plan), builder=running_builder())
+def provenance_of(pinned_set: PinnedSet, manifest: Manifest) -> Provenance:
+    return Provenance(carried=carried_set_of(pinned_set, manifest), builder=running_builder())
 
 
 def running_builder() -> Builder:
@@ -40,7 +40,7 @@ def running_builder() -> Builder:
     )
 
 
-def render_provenance_manifest(provenance: Provenance) -> str:
+def render_provenance_toml(provenance: Provenance) -> str:
     header = (
         "# Build provenance for this Vaudeville release. The [contributors] tables record each\n"
         "# Contributor repository and the exact commit its source was built from; the [builder]\n"

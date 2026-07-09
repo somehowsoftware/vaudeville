@@ -33,11 +33,10 @@ The committed design is in the Carryover, in the Resume Brief above, the three a
 Having re-read the doctrine, ground the committed design against it before you write (a check, not a re-derivation):
 
 - Does the committed design still map cleanly onto the ubiquitous language: the framework UL at `~/.vaudeville/doctrine/vocabulary.md` and the Context's local UL (typically `docs/vocabulary.md`)? If the design named a new term, was the vocabulary actually grown? Grow it now if the warm pass said it would and the change is not yet on disk.
+- Does every term the diff adds to a UL doc pass the reading it will get: a word a domain expert says aloud about what the system is for? A name only the code speaks failed that reading, however much the design needs the construct; it keeps its literate code name and comes back out of the vocabulary.
 - Are the pieces named in domain terms, each module owning one piece, the contracts written as tests before the modules that satisfy them?
 
 If the committed design and the freshly re-read doctrine disagree (a piece the design left unnamed, a contract it stated in implementation terms), that disagreement is a real signal, not noise to smooth over. Work it out and record the disagreement and how you resolved it in the pull request; this is work you carry to review, not a halt for permission. Return to the operator only if resolving it would overturn the goal you were dispatched to realize.
-
-**As a reminder: implementation details are not domain concepts. Domain concepts are domain concepts. Adding implementation details to the UL is contamination. Do not do this.**
 
 Then implement.
 

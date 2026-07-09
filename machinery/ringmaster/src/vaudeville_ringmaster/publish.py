@@ -7,20 +7,20 @@ from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
-from vaudeville_ringmaster.assemble import assemble_apply_plan
 from vaudeville_ringmaster.build import build_artifact
 from vaudeville_ringmaster.exposition import ExpositionLayout, render_exposition
 from vaudeville_ringmaster.exposition_commit import CommitExposition
 from vaudeville_ringmaster.github_release import CreateRelease
 from vaudeville_ringmaster.pinned_set import pin_session_clones
 from vaudeville_ringmaster.pristine_guard import enforce_pristine_guard_on
-from vaudeville_ringmaster.provenance import provenance_of, render_provenance_manifest
+from vaudeville_ringmaster.provenance import provenance_of, render_provenance_toml
 from vaudeville_ringmaster.published_artifact import published_artifact_for
 from vaudeville_ringmaster.published_home import PUBLISHED_HOME
 from vaudeville_ringmaster.registry import Registry
 from vaudeville_ringmaster.release import Release
 from vaudeville_ringmaster.release_name import ReleaseName, next_release_name
 from vaudeville_ringmaster.session_clone import SessionClone, require_each_session_clone_present_in
+from vaudeville_ringmaster.survey import survey_manifest
 from vaudeville_ringmaster.uv_operations import BuildWheel
 
 
@@ -36,14 +36,14 @@ def publish(
     commit_exposition: CommitExposition,
 ) -> None:
     clones = require_each_session_clone_present_in(registry, session_clones_dir)
-    # A Release and the Exposition beside it, like a Host Scaffold, carry only reviewed, merged
-    # code, so refuse a Hot-fixed Session Clone.
+    # A Release and the Exposition beside it, like a Host Installation, carry only reviewed, merged
+    # code, so refuse a Rehearsal-fixed Session Clone.
     enforce_pristine_guard_on(clones)
     # Name the Release before the expensive build, so a stuck tag-listing fails before the build.
     release_name = next_release_name(today, list_tags())
-    plan = assemble_apply_plan(registry, clones)
+    manifest = survey_manifest(registry, clones)
     pinned_set = pin_session_clones(registry, clones)
-    provenance = provenance_of(pinned_set, plan)
+    provenance = provenance_of(pinned_set, manifest)
     # The Exposition is committed on the Published Home first, and the Release is then pinned to
     # that exact commit, so the install Artifact and its readable companion share one Release Name
     # and one commit even if another push reaches the default branch in between. A failure after the
@@ -54,14 +54,14 @@ def publish(
         clones,
         layout,
         release_name,
-        render_provenance_manifest(provenance),
+        render_provenance_toml(provenance),
         commit_exposition,
     )
     # Compose the Release only now: the commit its tag points at does not exist until the
     # Exposition is written.
     release = Release(name=release_name, provenance=provenance, landed_commit=landed_commit)
     with tempfile.TemporaryDirectory() as artifact_root:
-        artifact = build_artifact(plan, Path(artifact_root), build_wheel=build_wheel)
+        artifact = build_artifact(manifest, Path(artifact_root), build_wheel=build_wheel)
         with tempfile.TemporaryDirectory() as packaging_dir:
             asset = published_artifact_for(
                 artifact, Path(packaging_dir) / release.name.asset_filename

@@ -5,6 +5,19 @@ import json
 import os
 import sys
 
+try:
+    from screen_reach import screen_disabled_here
+except ImportError:
+    # The reach helper is a sibling stock hook that vaudeville-hook contributes
+    # into the shared hooks dir. If it is absent, the screen cannot be told it is
+    # switched off, so it enforces.
+    def screen_disabled_here(screen_name: str, cwd: str | None) -> bool:
+        return False
+
+
+# This guard is the memory-writes screen; reach can switch it off per Component.
+SCREEN_NAME = "memory-writes"
+
 _PATH_KEYS = {
     "Write": "file_path",
     "Edit": "file_path",
@@ -50,6 +63,8 @@ def _classify(path: str) -> str | None:
 
 def main() -> int:
     payload = json.load(sys.stdin)
+    if screen_disabled_here(SCREEN_NAME, payload.get("cwd")):
+        return 0
     tool_name = payload.get("tool_name")
     path_key = _PATH_KEYS.get(tool_name)
     if path_key is None:

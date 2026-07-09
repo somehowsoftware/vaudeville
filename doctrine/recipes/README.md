@@ -17,6 +17,11 @@ and the scaffold deploys; a recipe is one you read and run by hand, reached for
 rather than invoked. As a recipe's mechanical parts harden, they graduate into a
 skill or a `vv` verb, and the recipe keeps only the judgment that remains.
 
+Recipes are secondary prose in the sense of the vocabulary's
+[Doctrine](../vocabulary.md#doctrine) entry: read rather than executed,
+subordinate to the primary. Where a recipe and the primary conflict, the
+primary wins and the recipe is revised.
+
 ## Contents
 
 - [Stripping the names](./stripping-the-names.md): a domain-model diagnostic — find where a mechanism is standing in for a missing concept.

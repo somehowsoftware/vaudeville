@@ -1,4 +1,5 @@
-"""The Pristine guard: refuse any hot-fixed Session Clone, so the Host reflects only merged code."""
+"""The Pristine guard: refuse any rehearsal-fixed Session Clone, so the Host reflects only
+merged code."""
 
 from __future__ import annotations
 
@@ -26,12 +27,14 @@ def session_clone_is_pristine_on_disk(session_clone: SessionClone) -> bool:
 
 
 def enforce_pristine_guard_on(session_clones: list[SessionClone]) -> None:
-    hot_fixed = [clone for clone in session_clones if not session_clone_is_pristine_on_disk(clone)]
-    if hot_fixed:
-        raise HotFixedSessionClones(hot_fixed)
+    rehearsal_fixed = [
+        clone for clone in session_clones if not session_clone_is_pristine_on_disk(clone)
+    ]
+    if rehearsal_fixed:
+        raise RehearsalFixedSessionClones(rehearsal_fixed)
 
 
-class HotFixedSessionClones(RuntimeError):
+class RehearsalFixedSessionClones(RuntimeError):
     def __init__(self, session_clones: list[SessionClone]) -> None:
         super().__init__(session_clones)
         self.session_clones = session_clones
@@ -39,9 +42,9 @@ class HotFixedSessionClones(RuntimeError):
     def __str__(self) -> str:
         listing = ", ".join(clone.name for clone in self.session_clones)
         return (
-            f"Hot-fixed Session Clones cannot be deployed: {listing}. "
-            "Productionize each Hot-fix as a PR, merge it into the relevant Contributor's main, "
-            "and re-run `ringmaster clone` before Apply."
+            f"Rehearsal-fixed Session Clones cannot be deployed: {listing}. "
+            "Productionize each Rehearsal Fix as a PR, merge it into the relevant Contributor's "
+            "main, and re-run `ringmaster clone` before Deploy."
         )
 
 

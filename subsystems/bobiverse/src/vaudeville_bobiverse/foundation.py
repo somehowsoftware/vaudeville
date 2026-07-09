@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import sys
+import tempfile
 import threading
 import tomllib
 from pathlib import Path
@@ -90,7 +92,29 @@ def _read_registry(path: Path) -> dict[str, str]:
 
 def _write(path: Path, registry: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(foundations_to_toml(registry))
+    # Stage the registry in a sibling temp file and swap it in with an atomic rename, so a
+    # kill mid-write leaves the prior file whole rather than a truncation that aborts every
+    # later read. The temp shares the registry's directory because os.replace is atomic only
+    # within one filesystem; no fsync, since the threat is a process kill (whose page cache
+    # survives), not power loss.
+    #
+    # Sweep any temp an earlier write orphaned before staging a new one. That kill lands out
+    # of frame — a prime fork saves in a ThreadPoolExecutor worker, and a hung process takes
+    # SIGKILL — so the finally below runs only for a catchable in-thread failure, never for
+    # the kill this fix exists to survive. Under a kill the temp is left behind, and mkstemp
+    # mints a fresh name each time, so without this sweep every interrupted prime would strand
+    # another one to accumulate unbounded. The sweep runs under the _save_lock that save
+    # holds, so it never removes a temp another thread has in flight.
+    for orphan in path.parent.glob(f"{path.name}.*.tmp"):
+        orphan.unlink(missing_ok=True)
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f"{path.name}.", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w") as staged:
+            staged.write(foundations_to_toml(registry))
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def _abort(message: str) -> NoReturn:

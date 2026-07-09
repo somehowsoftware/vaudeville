@@ -3,15 +3,11 @@
 # $WORKTREE_ARCHIVE_ROOT, then tear down its workmux entry (tmux window +
 # git worktree + local branch).
 #
-# Designed to be launched DETACHED (setsid + nohup + &) from the agent
-# whose own tmux pane this script will kill. Once the pane dies the
-# agent dies too, so this script must outlive both; that is what the
-# detachment buys us. Every `/closeout <disposition>` delegates here
-# through `vv teardown`, regardless of disposition.
-#
-# Usage:
-#   setsid nohup bash scripts/teardown-archive-and-remove.sh [name] \
-#       >> /tmp/teardown-archive.log 2>&1 < /dev/null &
+# Launched detached (by `vv teardown`) from the agent whose own tmux pane
+# this script will kill. Once the pane dies the agent dies too, so this
+# script must outlive both; that is what the detachment buys us. Every
+# `/closeout <disposition>` delegates here through `vv teardown`,
+# regardless of disposition.
 #
 # If [name] is omitted, the worktree name is derived from the basename
 # of the invoker's git toplevel (matching workmux's own naming), so the
@@ -43,9 +39,7 @@ fi
 # worktree survives removal of this one, so it's a safe cwd for teardown.
 MAIN_REPO="$(dirname "$(git -C "$INVOCATION_PWD" rev-parse --path-format=absolute --git-common-dir)")"
 
-ARCHIVE_ROOT="${WORKTREE_ARCHIVE_ROOT:-/root/vaudeville-bobiverse__worktrees__archive}"
-
-log() { echo "[$(date -Is)] $*"; }
+log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"; }
 
 # Resolve the worktree path while we're still inside a git repo.
 WT_PATH="$(workmux path "$NAME" 2>/dev/null || true)"
@@ -53,6 +47,12 @@ if [[ -z "$WT_PATH" || ! -d "$WT_PATH" ]]; then
   log "ERROR: cannot resolve worktree path for '$NAME'"
   exit 1
 fi
+
+# `vv teardown` always passes WORKTREE_ARCHIVE_ROOT (teardown.py derives it and
+# sets it in the child env), so this default is only reached on a standalone run.
+# Derive the canonical `…__worktrees__archive` sibling of the worktree — the same
+# path teardown.py computes — rather than assuming a writable /root.
+ARCHIVE_ROOT="${WORKTREE_ARCHIVE_ROOT:-$(dirname "$WT_PATH")__archive}"
 
 # Derive the Claude transcript directory from $WT_PATH using Claude Code's
 # project-dir encoding: replace every non-alphanumeric character with '-'. This
@@ -106,6 +106,14 @@ if [[ "$TRANSCRIPT_PRESENT" == "1" ]]; then
   rsync -a "$TRANSCRIPT_DIR/" "$DEST/.claude-transcripts/"
 fi
 
+# The archive above is the durable step: by here the working tree (uncommitted
+# work included) is safely copied. So a `workmux remove` that hits an already-gone
+# pane or a half-removed entry must not abort a teardown whose archive succeeded —
+# log the leftover for the forensic trail and finish. Only this final step is
+# tolerant; every step up to and including the archive stays fatal.
 log "Tearing down workmux entry for '$NAME' (kills pane, removes worktree and branch)"
-workmux remove --force "$NAME"
-log "Done."
+if workmux remove --force "$NAME"; then
+  log "Done."
+else
+  log "WARNING: 'workmux remove --force $NAME' exited $?; archive at $DEST is complete. Treating the workmux entry as already-gone or half-removed and finishing; inspect for a leftover pane or worktree."
+fi

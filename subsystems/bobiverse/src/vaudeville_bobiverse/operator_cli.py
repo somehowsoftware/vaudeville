@@ -10,7 +10,6 @@ from vaudeville_bobiverse import bob as bob_mod
 from vaudeville_bobiverse import claude_projects
 from vaudeville_bobiverse import prime as prime_mod
 from vaudeville_bobiverse.data_dir import data_dir
-from vaudeville_bobiverse.prime_fanout import prime_report
 from vaudeville_bobiverse.spawn import orchestrate
 
 PRIME_USAGE_EXIT = 2
@@ -40,11 +39,12 @@ def canonical_assignment_id(assignment: str) -> str:
 
 
 def spawn_each(assignment_ids: list[str], spawn_one: Callable[[str], None]) -> bool:
-    # Serial by necessity: each spawn rewrites the managed clones (the refresh that
-    # keeps workmux's --fork source resolvable), so two at once would race on them.
-    # The downstream gates exit on failure without reliably naming the id, so this
-    # loop names it: on a SystemExit the gate's cause is already on stderr and only
-    # the exit code is left to add; an ordinary exception has not been printed at all.
+    # Serial for legible per-id reporting, not for safety: each spawn cuts from an
+    # immutable base commit it resolves for itself, so concurrent spawns share no
+    # mutable state to race on. The downstream gates exit on failure without reliably
+    # naming the id, so this loop names it: on a SystemExit the gate's cause is already
+    # on stderr and only the exit code is left to add; an ordinary exception has not
+    # been printed at all.
     any_failed = False
     for assignment_id in assignment_ids:
         try:
@@ -127,19 +127,7 @@ def prime_command(
     if component is not None:
         prime_mod.main(component_from_name(component), data_dir(), claude_projects.projects_root())
         return
-    stdout_lines, stderr_lines, exit_code = prime_report(
-        prime_mod.prime_all(
-            list_components(),
-            data_files_root=data_dir(),
-            projects_root=claude_projects.projects_root(),
-        )
-    )
-    for line in stdout_lines:
-        typer.echo(line)
-    for line in stderr_lines:
-        typer.echo(line, err=True)
-    if exit_code != 0:
-        raise typer.Exit(code=exit_code)
+    prime_mod.main_all(list_components(), data_dir(), claude_projects.projects_root())
 
 
 def main() -> None:

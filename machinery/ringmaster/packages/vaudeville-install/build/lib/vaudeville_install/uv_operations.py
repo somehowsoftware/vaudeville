@@ -1,23 +1,21 @@
-"""The imperative shell for the installer's uv calls: install the Facade from the carried wheels.
-
-Mirrors the integrator's wheel-building uv shell on the install side: the installer resolves the
-Facade and the Contributors it composes from the Unit's carried wheels (``--find-links``) plus
-public PyPI (``--index-url``), so a host needs nothing but ``uv`` and the Unit.
+"""The installer's uv boundary: install the Composed CLI and the Contributors it composes from the
+Artifact's carried wheels (``--find-links``) plus public PyPI (``--index-url``), so a host needs
+nothing but ``uv`` and the Artifact.
 """
 
 from __future__ import annotations
 
-import os
 import re
-import subprocess
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Protocol
+
+from vaudeville_install.child_process import Completed, LaunchFailed, Outcome, Spec, TimedOut
 
 PUBLIC_INDEX = "https://pypi.org/simple"
 
 
-class InstallFacade(Protocol):
+class InstallComposedCLI(Protocol):
     def __call__(
         self,
         *,
@@ -29,7 +27,7 @@ class InstallFacade(Protocol):
     ) -> None: ...
 
 
-def facade_install_argv(
+def composed_cli_install_argv(
     distribution: str, find_links: Path, index_url: str, refresh_packages: Iterable[str]
 ) -> list[str]:
     refresh = [token for package in refresh_packages for token in ("--refresh-package", package)]
@@ -65,22 +63,47 @@ def distribution_name_of_wheel(wheel: Path) -> str:
     return re.sub(r"[-_.]+", "-", escaped_name).lower()
 
 
-def install_facade_with_uv(
+def build_uv_install_spec(
     *,
     distribution: str,
     find_links: Path,
     index_url: str,
     bin_dir: Path,
     tool_dir: Path,
-) -> None:
-    _run_uv(
-        facade_install_argv(
-            distribution, find_links, index_url, carried_distribution_names_in(find_links)
-        ),
-        extra_env={"UV_TOOL_BIN_DIR": str(bin_dir), "UV_TOOL_DIR": str(tool_dir)},
-    )
+    refresh_packages: Iterable[str],
+    base_env: Mapping[str, str],
+    timeout: float,
+) -> Spec:
+    env = {**base_env, "UV_TOOL_BIN_DIR": str(bin_dir), "UV_TOOL_DIR": str(tool_dir)}
+    argv = composed_cli_install_argv(distribution, find_links, index_url, refresh_packages)
+    return Spec(argv=argv, env=env, timeout=timeout)
 
 
-def _run_uv(argv: list[str], *, extra_env: dict[str, str] | None = None) -> None:
-    environment = {**os.environ, **extra_env} if extra_env else None
-    subprocess.run(argv, env=environment, check=True, capture_output=True)
+def interpret_uv_install(distribution: str, outcome: Outcome) -> None:
+    match outcome:
+        case Completed(returncode=0):
+            return
+        case Completed(returncode=returncode, stdout=stdout, stderr=stderr):
+            raise ComposedCLIInstallFailed(distribution, _uv_account(returncode, stdout, stderr))
+        case TimedOut(timeout=timeout):
+            raise ComposedCLIInstallFailed(
+                distribution, f"`uv tool install` did not finish within {timeout:g}s"
+            )
+        case LaunchFailed(reason=reason):
+            raise ComposedCLIInstallFailed(distribution, reason)
+
+
+def _uv_account(returncode: int, stdout: str, stderr: str) -> str:
+    streams = "\n".join(stream.strip() for stream in (stderr, stdout) if stream and stream.strip())
+    header = f"`uv tool install` exited {returncode}"
+    return f"{header}:\n{streams}" if streams else f"{header}, with no output captured."
+
+
+class ComposedCLIInstallFailed(RuntimeError):
+    def __init__(self, distribution: str, account: str) -> None:
+        super().__init__(distribution, account)
+        self.distribution = distribution
+        self.account = account
+
+    def __str__(self) -> str:
+        return f"Installing the Composed CLI ({self.distribution}) failed:\n{self.account}"

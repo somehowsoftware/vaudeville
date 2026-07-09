@@ -1,8 +1,8 @@
 """Substituting the deployed hooks-directory path into a Contributor's hook commands.
 
-Build writes the merged Hook-Matcher fragment into the Unit carrying the literal
+Build writes the merged Hook-Matcher fragment into the Artifact carrying the literal
 ``$VV_HOOKS_DIR`` placeholder; the installer substitutes the Destination's absolute hooks path
-here as it writes the Vaudeville-managed ``settings.json``. The placeholder spelling is the
+here as it materializes the Hook Wiring into the ``settings.json``. The placeholder spelling is the
 shared one in the [artifact contract](artifact.py).
 """
 

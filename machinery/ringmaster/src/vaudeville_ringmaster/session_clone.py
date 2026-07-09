@@ -11,7 +11,7 @@ from vaudeville_ringmaster.registry import Registry
 
 # Sidecar inside each Session Clone's .git/ recording the commit SHA the clone was produced
 # at. Lives under .git/ so git ignores it; the Pristine guard reads it to detect HEAD movement
-# since Clone, even when the operator later pushed their hot-fix back to origin/main.
+# since Clone, even when the operator later pushed their rehearsal fix back to origin/main.
 CLONE_TIME_SHA_SIDECAR = Path(".git") / "ringmaster-clone-sha"
 
 

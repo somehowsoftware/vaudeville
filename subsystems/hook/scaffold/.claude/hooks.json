@@ -1,0 +1,12 @@
+{
+  "PostToolBatch": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"$VV_HOOKS_DIR/screen_headroom.py\""
+        }
+      ]
+    }
+  ]
+}

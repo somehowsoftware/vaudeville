@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -90,10 +91,17 @@ class ClaudeInvocation:
     argv: list[str]
     cwd: Path
     log_path: Path | None = None
+    # Priming never reads stdin: --print runs one non-interactive turn. Closing it
+    # keeps a first-run trust or auth prompt from blocking on an inherited tty, the
+    # same hang the sibling spawn path forecloses in WorkmuxInvocation.
+    stdin: int = subprocess.DEVNULL
 
 
 def bedrock_invocations(
-    bedrock_session_id: str, *, data_files_root: Path, log_path: Path | None = None
+    bedrock_session_id: str,
+    *,
+    data_files_root: Path,
+    log_path: Path | None = None,
 ) -> list[ClaudeInvocation]:
     # The shared turns read only the host-fixed doctrine/ and project-docs/ subtrees,
     # so they need no Component checkout; the data dir is a stable place to run them in.

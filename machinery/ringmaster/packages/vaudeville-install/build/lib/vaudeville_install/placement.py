@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import json
-import os
 import shutil
-import tomllib
 from pathlib import Path
 
 from vaudeville_install.artifact import (
@@ -16,54 +13,21 @@ from vaudeville_install.artifact import (
     RESERVED_FILENAMES,
     Artifact,
 )
-from vaudeville_install.auto_mode import (
-    FRAMEWORK_AUTO_MODE,
-    assemble_auto_mode,
-    compose_environment,
-    source_control_root,
-)
 from vaudeville_install.data_file_ledger import (
     prune_data_files_a_prior_install_placed,
     record_placed_data_files,
 )
-from vaudeville_install.destination import Destination, Host, Layout, Staging
+from vaudeville_install.destination import Destination, Host, Layout, Rehearsal
 from vaudeville_install.doc_tree import install_doc_tree_at
-from vaudeville_install.hook_substitution import replace_hooks_dir_placeholder_in
-from vaudeville_install.host_wiring import locate_youtrack
-from vaudeville_install.settings import write_vaudeville_managed_settings
-from vaudeville_install.uv_operations import PUBLIC_INDEX, InstallFacade
-
-
-def missing_artifact_components(artifact: Artifact) -> list[str]:
-    """The layout components a root lacks; empty for an Artifact Build produced.
-
-    Build always creates every slot directory (even when empty) and writes the matcher fragment, so
-    a root missing any of these was not produced by Build: a wrong or partial path.
-    """
-    required = {
-        "skills/": artifact.skills,
-        "data/": artifact.data_files,
-        "doc-trees/": artifact.doc_trees,
-        "hooks/": artifact.hooks,
-        "cli/": artifact.carried_cli,
-    }
-    missing = [label for label, path in required.items() if not path.is_dir()]
-    if not artifact.hook_matchers.is_file():
-        missing.append("hook-matchers.json")
-    return missing
-
-
-class MalformedArtifact(RuntimeError):
-    def __init__(self, root: Path, missing: list[str]) -> None:
-        super().__init__(root, missing)
-        self.root = root
-        self.missing = missing
-
-    def __str__(self) -> str:
-        return (
-            f"{self.root} is not a well-formed Artifact (missing: {', '.join(self.missing)}). "
-            "Point --artifact at an Artifact produced by `ringmaster build`."
-        )
+from vaudeville_install.hook_wiring import hook_wiring_for
+from vaudeville_install.settings import write_owned_settings
+from vaudeville_install.tenant_config import TenantConfigUnreadable
+from vaudeville_install.tenant_hooks import (
+    place_tenant_hook_scripts,
+    raise_if_tenant_hook_scripts_collide,
+)
+from vaudeville_install.trust_declarations import trust_declarations_for
+from vaudeville_install.uv_operations import PUBLIC_INDEX, InstallComposedCLI
 
 
 def install_artifact(
@@ -71,23 +35,25 @@ def install_artifact(
     destination: Destination,
     *,
     config_dir: Path,
-    install_facade: InstallFacade,
+    install_composed_cli: InstallComposedCLI,
 ) -> None:
+    # First, before _prepare wipes the host's hooks dir: a tenant naming error aborts untouched.
+    raise_if_tenant_hook_scripts_collide(artifact.hooks, config_dir)
     layout = destination.layout
     _prepare(destination)
     _place_skills(artifact, layout)
-    _place_hooks(artifact, layout)
+    _place_hooks(artifact, layout, config_dir)
     _place_data_files(artifact, destination)
     _place_doc_trees(artifact, layout)
     _place_config(config_dir, layout)
     _write_settings(artifact, destination, config_dir)
-    _install_facade(artifact, layout, install_facade)
+    _install_composed_cli(artifact, layout, install_composed_cli)
     _mirror_host_state(destination)
 
 
 def _prepare(destination: Destination) -> None:
     match destination:
-        case Staging(root=root):
+        case Rehearsal(root=root):
             if root.exists():
                 shutil.rmtree(root)
             root.mkdir(parents=True)
@@ -115,8 +81,9 @@ def _place_skills(artifact: Artifact, layout: Layout) -> None:
     shutil.copytree(artifact.skills, layout.skills_dir)
 
 
-def _place_hooks(artifact: Artifact, layout: Layout) -> None:
+def _place_hooks(artifact: Artifact, layout: Layout, config_dir: Path) -> None:
     shutil.copytree(artifact.hooks, layout.hooks_dir)
+    place_tenant_hook_scripts(config_dir, layout.hooks_dir)
 
 
 def _place_data_files(artifact: Artifact, destination: Destination) -> None:
@@ -155,7 +122,13 @@ def _place_config(config_dir: Path, layout: Layout) -> None:
     data_dir = layout.data_dir
     data_dir.mkdir(parents=True, exist_ok=True)
     for name in (PROJECT_MAP_FILENAME, CREDENTIALS_FILENAME):
-        shutil.copy2(config_dir / name, data_dir / name)
+        source = config_dir / name
+        try:
+            shutil.copy2(source, data_dir / name)
+        except FileNotFoundError as missing:
+            # A Tenant Config the install must place but the config dir lacks: name the file the
+            # operator has to provide rather than let a raw FileNotFoundError escape as a traceback.
+            raise TenantConfigUnreadable(source, missing) from missing
     placed_docs = data_dir / "project-docs"
     if placed_docs.exists():
         shutil.rmtree(placed_docs)
@@ -165,47 +138,26 @@ def _place_config(config_dir: Path, layout: Layout) -> None:
 
 
 def _write_settings(artifact: Artifact, destination: Destination, config_dir: Path) -> None:
-    merged = json.loads(artifact.hook_matchers.read_text())
-    hooks_block = replace_hooks_dir_placeholder_in(merged, destination.layout.hooks_dir)
-    write_vaudeville_managed_settings(
+    write_owned_settings(
         destination.layout.settings_path,
-        hooks=hooks_block,
-        auto_mode=_managed_auto_mode(config_dir),
+        hook_wiring=hook_wiring_for(artifact, config_dir, destination.layout.hooks_dir),
+        trust_declarations=trust_declarations_for(config_dir),
         base_settings_path=_settings_base_for(destination),
     )
 
 
-def _managed_auto_mode(config_dir: Path) -> dict[str, list[str]]:
-    roots = [
-        root for remote in _project_remotes(config_dir) if (root := source_control_root(remote))
-    ]
-    tracker_host, _ = locate_youtrack(os.environ, config_dir / CREDENTIALS_FILENAME)
-    return assemble_auto_mode(FRAMEWORK_AUTO_MODE, compose_environment(roots, tracker_host))
-
-
-def _project_remotes(config_dir: Path) -> list[str]:
-    project_map = config_dir / PROJECT_MAP_FILENAME
-    if not project_map.is_file():
-        return []
-    with project_map.open("rb") as handle:
-        projects = tomllib.load(handle).get("projects", {})
-    return [
-        table["remote"]
-        for table in projects.values()
-        if isinstance(table, dict) and isinstance(table.get("remote"), str)
-    ]
-
-
 def _settings_base_for(destination: Destination) -> Path | None:
     match destination:
-        case Staging(host_home=host_home):
+        case Rehearsal(host_home=host_home):
             return host_home / ".claude" / "settings.json"
         case Host():
             return None
 
 
-def _install_facade(artifact: Artifact, layout: Layout, install_facade: InstallFacade) -> None:
-    install_facade(
+def _install_composed_cli(
+    artifact: Artifact, layout: Layout, install_composed_cli: InstallComposedCLI
+) -> None:
+    install_composed_cli(
         distribution=FACADE_DISTRIBUTION,
         find_links=artifact.carried_cli,
         index_url=PUBLIC_INDEX,
@@ -218,10 +170,10 @@ def _mirror_host_state(destination: Destination) -> None:
     match destination:
         case Host():
             return
-        case Staging(root=root, host_home=host_home):
+        case Rehearsal(root=root, host_home=host_home):
             host_dotfile = host_home / ".claude.json"
             if host_dotfile.is_file():
-                # claude writes back to .claude.json, so the Staged Scaffold copies
+                # claude writes back to .claude.json, so the Rehearsal Installation copies
                 # it rather than symlinking; the stand-in must never be a writeback
                 # path into operator state.
                 shutil.copy2(host_dotfile, root / ".claude.json")

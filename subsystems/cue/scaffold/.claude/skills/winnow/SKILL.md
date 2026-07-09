@@ -28,13 +28,17 @@ The tree below is that layering made runnable. Ground your judgement in the doct
 
 ## The standard
 
-A comment or docstring earns its place only if it states something strictly **not observable from the code**: an external contract, a hazard, a *why* the code cannot show. Anything that describes *what the code does* is forbidden, docstrings included: a module or function docstring that names the code's job is describing the code, so it goes. A comment is never a licence to leave code unclear.
+A comment or docstring earns its place only if it states something the code **cannot be made to carry**: an external contract, a hazard, a *why* that lives outside this code. The test is whether the code *could* carry it, not whether it happens to today — an intent the code merely fails to enact (an ordering nothing enforces, an invariant nothing checks) reads as unobservable but is a design defect the comment is papering over, not a fact that earns a keep. Anything that describes *what the code does* is forbidden, docstrings included: a module or function docstring that names the code's job is describing the code, so it goes. A comment is never a licence to leave code unclear.
 
 ## The tree
 
 Most of this work is not deleting comments; it is making the code carry what the comment was carrying, after which the comment has nothing left to say. For each comment and docstring in scope, in order:
 
-1. **Does it state something strictly not observable from the code?** If yes, it may stay, and ask whether the spec is its better home, moving it there if so. If no, it describes the code: steps 2 and 3 make the code carry what it was saying, and only then does the comment go.
+1. **Does it state something strictly not observable from the code?** If no, it describes the code: steps 2 and 3 make the code carry what it was saying, and only then does the comment go. If yes, ask one more question, because *not observable* has two causes and only one earns a keep:
+   - **The code could not carry it** — an external contract, a hazard, a decision's reason, a *why* that lives outside this file. It stays; ask whether the spec is its better home, and move it there if so.
+   - **The code fails to carry it** — the comment states an intent the code should enact but doesn't: an order nothing enforces (`in dependency order`), an exhaustiveness nothing checks, a `must run before X`, a `kept in sync with Y`. This is a smoke alarm, not a keep — the verbiage is a gift pointing at the design defect underneath. Route it into steps 2 and 3: make the code carry the intent (enforce the invariant, restructure so the order is manifest in the data flow, add the behavioral test), then the comment goes with the rest.
+
+   The tell between the two: could the code be changed so the fact no longer needs saying? If yes, it is the second case — however true, and however unobservable it is today.
 2. **Make the names carry the meaning.** Rename for literacy. The tells of a name doing a comment's job: an abbreviation, an adjective or preposition standing in for a noun or verb, a grammatically incomplete name, or a clever expression explained in prose instead of unpacked into named steps.
 3. **Is the piece still illegible once the names are literate?** Then the comment was masking a deeper failure (of factorization or of test design), not a naming gap. Do not settle for a cosmetic rename: reject this implementation of the piece, ask the five whys to find the root cause, and re-implement it for clarity. Clarity always translates to maintainability; that is what the re-implementation buys.
 
@@ -52,3 +56,24 @@ Cut or tighten what fails. Where the content is real but misplaced, relocate it 
 ## Apply, don't report
 
 Winnow makes the edits in the working tree. It is not a review that hands back a list; each passage is disposed of where it lives, so the diff that reaches review is already clean. When the honest fix is to re-implement a piece rather than re-word a line, that is the work winnow does, not a follow-up it defers.
+
+## The neutral gate
+
+The disposition winnow gets wrong is the fig leaf it keeps: a comment stating an intent the code does not enact, kept because the intent is genuinely not observable from the code — which reads as "the code can't carry it" when the truth is "the code fails to carry it." You are the worst-placed reader to catch your own: having just decided to keep each comment, seeing the fig leaf means overturning your own call, and the same reasoning that let it stand the first time stands ready to let it stand again. So the last act before the exit is to hand the pass's survivors to a reader who has no such investment.
+
+Spawn a clean-context subagent and feed it [`gate.md`](gate.md) verbatim, followed by the comments this pass left standing, each with the code it annotates. Give it the survivors and their code and nothing else — never your reasoning for keeping them; that reasoning is exactly what it exists to test, and reading it would let it inherit your justification instead of the result. It returns the fig leafs it can quote, or "none."
+
+For each one it flags, do the owed escalation: route the comment back into steps 2 and 3 of the tree — make the code carry the intent (enforce the invariant, restructure so the order is manifest, add the behavioral test), then delete the comment. The gate names the finding; the escalation is winnow's own work, the same work step 1 routes there. Do not argue the flag away: a clean-context reader quoting an unenforced intent is the signal step 1 is built to act on, not a second opinion to weigh against your own. Trust the gate on the fig leaf, and only the fig leaf — it does not judge your cuts, your renames, or the surface you chose, so a "none" is not licence and a flag beyond the fig-leaf pattern is not its to give.
+
+A gate escalation changes code, so it lands the pass in the code branch of the exit below: the diff under review has changed, and it converges through `/parlay`.
+
+## The pass ends on the remote
+
+An unpushed winnow is indistinguishable from one that never ran: the operator reads the pass's work on the remote, never in your working tree. Finishing the edits is therefore not finishing the pass.
+
+Commit the edits as their own commit — the winnow's work and nothing else, so the pass reads as one diff — and push. Size does not modulate this: a one-character edit is still read on the remote. Then:
+
+- **If any edit reached the code** (a rename, a factoring change, a re-implementation): the diff under review has changed. Invoke `/parlay` to converge it.
+- **If the edits stayed within comments and documentation**: push, confirm the pushed commit's CI completes green (a comment edit can still break a lint gate), and stop; there is nothing for a reviewer to re-converge.
+
+When winnow runs inside a procedure that ends in a tender, that tender is this exit and carries the convergence. Only the operator's own instruction — a "don't push it yet" in the invocation — holds any of it back.

@@ -115,4 +115,9 @@ def _worktree_root() -> Path:
             file=sys.stderr,
         )
         sys.exit(CHECKPOINT_REFUSED_EXIT)
-    return Path(toplevel.stdout.strip())
+    # Claude Code names a session's project directory from the realpath-resolved
+    # cwd, and that directory name is what gets encoded into the transcript slug. A
+    # root reached through a symlink (e.g. macOS routing $TMPDIR via /var ->
+    # /private/var) would otherwise encode a slug the session was never written
+    # under. Resolve to match, in parity with prime's own guard.
+    return Path(toplevel.stdout.strip()).resolve()

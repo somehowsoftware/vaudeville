@@ -1,49 +1,30 @@
-# Vaudeville: a tool for the opposite of vibe coding
+# Vaudeville — the opposite of vibe coding
 
-Vaudeville is a tool for developing software slowly. Its method is called *dialectical engineering*. Its doctrine cites [Hegel](https://en.wikipedia.org/wiki/Dialectic#Hegelian_dialectic), [the Talmud](https://en.wikipedia.org/wiki/Chavrusa#Practice), and [crew resource management](https://en.wikipedia.org/wiki/Crew_resource_management#Emphasis_on_non-technical_skills). Its name comes from a [dead theatrical form](https://en.wikipedia.org/wiki/Vaudeville). When you say it out loud, it sounds stupid; it reliably earns skepticism, eye-rolls, and occasionally outright pity. These are all reasonable reactions.
+There are three things you can want from coding agents, and this framework sells exactly one of them.
 
-The point is to build software that neither a human nor an agent could build alone. Most useful software is not that. Most of the time, Vaudeville is the wrong tool for the job. It's the right tool when you want to [build a to-do app](./the-point.md#velocity-reach-depth) with the level of rigor usually reserved for spacecraft guidance systems.
+| You want | Which means | Where to get it |
+| --- | --- | --- |
+| **Velocity** | Building what you already understand, fast | The mainstream agent tools — they are excellent at this |
+| **Reach** | Building what you don't know how to build, but the model does | The same tools, the same excellence |
+| **Depth** | Building systems whose parts are individually intelligible but whose whole exceeds what one mind can hold in stable relation | Here |
 
-Uncharitably, Vaudeville is for glorious over-engineering. [Donald Knuth spent twelve years inventing TeX](https://en.wikipedia.org/wiki/TeX#History). If you ever looked at that and thought, "I wish that were me," this could be a nice tool for you.
+Vaudeville is an engine for depth, and its method — dialectical engineering — is not about coding. The point is work that neither a human nor an agent could produce alone: the operator adjudicates meaning — names, framings, which distinctions matter — while the agent holds the whole system in one curated context window, which is the common intuition about agents (good for prototypes, blind to the big picture) turned exactly on its head. Between the two runs a sustained, opposable argument in which misunderstandings surface and become the insight. The coding is residue: what falls out once the earlier questions have been forced into clarity. Which is why this framework does the opposite of what agent tools are built for — it does not let you walk away. It aims your attention instead of freeing it.
 
-## The enemy
+The machinery enforces one asymmetry everywhere. Friction that is accidental — setup, bookkeeping, navigation, integration grind — is driven toward zero. Friction that is deliberate — the seams where two understandings diverge — is amplified and handed both parties' cleared attention. The friction is the product: the argument is where the work gets done that neither party could have done alone.
 
-The enemy is plausible code that quietly changes what the system means. A predicate becomes a filter. A filter becomes a state transition. A user-interface metaphor becomes a domain primitive. Every diff reads as reasonable, and the system ends up wrong in a way that only surfaces when the parts have to compose.
+The enemy is not bad code; agents stopped writing obviously bad code a while ago. It is plausible code that quietly changes what the system means — nearby concepts blurring into one another until the words say one thing and the system does another: a predicate becomes a filter, a user-interface metaphor becomes a domain primitive. Every diff reads as reasonable, and the system is wrong in a way that surfaces only when the parts compose. Depth work concentrates this failure. Keeping meaning intact across every hand-off is the framework's containment layer — necessary, engineered hard, and not the point.
 
-## You probably don't need this
+The parts list is the one you have seen everywhere: ephemeral agents, git worktrees, primed contexts, tests as contracts, pull requests, a tracker. Nothing in the inventory is new, and stealing any single part will not give you Vaudeville — nobody who builds an interesting robot is bragging about the servos. What differs is what the assembly is aimed at, and the discipline is genuinely demanding: XP and domain-driven design at full strength, a vocabulary enforced rather than encouraged, an agent under standing instruction to oppose you, acceptance criteria banned from the unit of work whose framing must stay open. If your sense of momentum is watching code appear, this will feel like obstruction. It is obstruction, aimed on purpose at the escape routes premature implementation provides.
 
-Most useful new software is similar to one or another class of useful existing software. That's great, because it means that agents can pick up the thread and run with it. Vaudeville is 4WD low: you'll go slower on every road but the one that would have stopped you. If you are building software that can be understood as "the same kind of thing as X, but retargeted at/optimized for/designed around Y", this is not the droid you're looking for.
+The evidence status, plainly: the failure mode this targets is documented by parties with no stake in the framework; the harm of the *delegation* mode of agent use is among the best-replicated results in the young literature; and the benefit of the mode this framework enforces is a named, falsifiable wager — not a finding. The framework builds itself and has one committed operator, which is an existence proof and nothing more. [The theory](theory/) states what would change our minds, and the experiments queued to test it — including [the miss](theory/the-miss.md), where the first edition of this corpus failed in exactly the way the framework says work fails, and the record of what caught it.
 
-Vaudeville is built for systems where:
-1. each part is individually intelligible, and yet
-2. the total coordination burden exceeds what one mind can hold in stable relation long enough to build them. 
+Most software does not need this. Velocity and reach cover nearly everything, and for that work this framework is pure cost — four-wheel-drive low range on dry pavement. The gate, honestly: a system whose parts are simple but whose coordination burden exceeds one mind; an operator with domain-driven design as a working habit and an appetite for being argued with; repositories decomposed along semantic boundaries, or a greenfield where they can be. Anything less is a no, and you're not wrong to bounce. But the class of work that passes the gate is, on this corpus's own argued-and-untested claim, a frontier rather than a niche: software that mostly went unattempted, because coherence at that interaction density could not be bought at human prices. One more thing, so you know what you are signing up for: the process depends on you being wrong, confused, and ignorant in front of a partner, on purpose, repeatedly. That is what the friction is for.
 
-If you are staring at such a problem, this framework stops being philosophy and starts being the most practical tool available.
+Where to go next:
 
-## You probably won't like this
+- [The map](map.md) — the whole framework in one read: the axiom, the engine, every practice a derivation.
+- [The theory](theory/) — the argument at full length, with its evidence and its joints exposed. Reading for the ideas rather than the tool? Enter here.
+- [The manual](doctrine/manual.md) — install the framework and run your first assignment; start playing without the whole rulebook.
+- [The vocabulary](doctrine/vocabulary.md) — every coined term, defined once.
 
-The framework is opinionated in directions that are largely abandoned because they are usually overkill. Two key points on this:
-
-- **It is XP and domain-driven design taken at full strength:** tests written before the code and named as contracts, a ubiquitous language that is enforced rather than encouraged, bounded contexts with real borders, docstrings banned, comments nearly banned, acceptance criteria banned from premises.
-
-- **It manufactures friction on purpose.** The characteristic unit of work is not a ticket, but a _premise_. The agent is under standing instruction to oppose you. If what you want is an amiable executor of instructions, this will be a miserable fit. The friction is the product: the argument is where the work gets done that neither party could have done alone.
-
-## The code here is reorganized for reading
-
-The tree in this repository is not the source as it is developed: it has been reorganized for legibility. This mechanism also lets me write my drafts unobserved. Keeping the [Components](./doctrine/vocabulary.md#component) private allows me to celebrate, despair, curse, kvetch, berate, and laugh at my own jokes in private. 
-
-Dialectical engineering is [designed to surface misconceptions](./the-point.md). The process depends on you being _wrong_, _confused_, and _ignorant_. Doing that in front of an audience changes the character of that work.
-
-## Getting started
-
-### Key resources
-- [Prerequisites](./prerequisites.md): whether you should use Vaudeville at all.
-- [Concepts](./concepts.md): the vocabulary built up as exposition.
-- [Walkthrough](walkthrough.md): a tour of how Vaudeville is built using Vaudeville.
-- [Workflow](./workflow.md): the day-to-day process of working in Vaudeville.
-- [Installation](./installation.md): the mechanics of starting your Vaudeville project.
-
-### Additional reading
-- [The point](./the-point.md): optimistically, an essay on what Vaudeville is for. Pessimistically, a screed.
-- [Weaponized philosophy](./weaponized-philosophy.md): where the practices come from.
-- [Glossary](doctrine/vocabulary.md): the reference version of [Concepts](./concepts.md).
+If you are staring at a problem with this shape, I want to hear about it: `vaudeville at somehowsoftware dot com`.

@@ -1,4 +1,4 @@
-"""The Exposition: a for-reading rendering of the assembled source, committed beside a Release."""
+"""The Exposition: a for-reading rendering of the integrated source, committed beside a Release."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ VAUDEVILLE_EXPOSITION_LAYOUT = ExpositionLayout(
     subtree_sections=(
         Section(
             name="subsystems",
-            members=("vaudeville-bobiverse", "vaudeville-pm", "vaudeville-cue"),
+            members=("vaudeville-bobiverse", "vaudeville-pm", "vaudeville-cue", "vaudeville-hook"),
         ),
         Section(name="machinery", members=("vaudeville-ringmaster", "vaudeville-core")),
     ),

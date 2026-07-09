@@ -1,6 +1,6 @@
-# Ringmaster Registry: the integrator-internal roster of Contributor Repos to assemble.
+# Ringmaster Registry: the integrator-internal roster of Contributor Repos to survey.
 # Ships with the Ringmaster package and is read from beside the module: the roster of what to
-# assemble stays with the integrator and is never sourced from ~/.vaudeville or the operator's
+# survey stays with the integrator and is never sourced from ~/.vaudeville or the operator's
 # config dir. Each entry pairs a Contributor Repo name with its git remote; Clone fetches
 # origin/main of each into a Session Clone.
 
@@ -9,5 +9,6 @@ vaudeville-bobiverse = "https://github.com/somehowsoftware/vaudeville-bobiverse.
 vaudeville-core = "https://github.com/somehowsoftware/vaudeville-core.git"
 vaudeville-cue = "https://github.com/somehowsoftware/vaudeville-cue.git"
 vaudeville-doctrine = "https://github.com/somehowsoftware/vaudeville-doctrine.git"
+vaudeville-hook = "https://github.com/somehowsoftware/vaudeville-hook.git"
 vaudeville-pm = "https://github.com/somehowsoftware/vaudeville-pm.git"
 vaudeville-ringmaster = "https://github.com/somehowsoftware/vaudeville-ringmaster.git"

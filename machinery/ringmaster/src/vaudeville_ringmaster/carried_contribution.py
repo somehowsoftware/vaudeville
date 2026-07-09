@@ -6,8 +6,8 @@ shipped derive from the same source and cannot drift apart.
 
 from __future__ import annotations
 
-from vaudeville_ringmaster.apply_plan import ApplyPlan
 from vaudeville_ringmaster.contribution import Contribution
+from vaudeville_ringmaster.manifest import Manifest
 
 
 def contribution_carries_a_wheel(contribution: Contribution) -> bool:
@@ -16,7 +16,7 @@ def contribution_carries_a_wheel(contribution: Contribution) -> bool:
     # CLI but contributes no Command Surface (the integrator itself) is build-time tooling, not
     # part of what installs.
     return contribution.distribution is not None and (
-        contribution.manifest is not None or not contribution.console_scripts
+        contribution.cli_declaration is not None or not contribution.console_scripts
     )
 
 
@@ -33,9 +33,9 @@ def contribution_carries_scaffold(contribution: Contribution) -> bool:
     )
 
 
-def carried_contributions(plan: ApplyPlan) -> list[Contribution]:
+def carried_contributions(manifest: Manifest) -> list[Contribution]:
     return [
         contribution
-        for contribution in plan.contributions
+        for contribution in manifest.contributions
         if contribution_carries_a_wheel(contribution) or contribution_carries_scaffold(contribution)
     ]

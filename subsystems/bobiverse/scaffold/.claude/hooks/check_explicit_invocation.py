@@ -6,6 +6,19 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    from screen_reach import screen_disabled_here
+except ImportError:
+    # The reach helper is a sibling stock hook that vaudeville-hook contributes
+    # into the shared hooks dir. If it is absent, the screen cannot be told it is
+    # switched off, so it enforces.
+    def screen_disabled_here(screen_name: str, cwd: str | None) -> bool:
+        return False
+
+
+# This guard is the explicit-invocation screen; reach can switch it off per Component.
+SCREEN_NAME = "explicit-invocation"
+
 PROTECTED_SKILLS = frozenset({"closeout", "onward"})
 
 # `vv teardown` / `vv-bob teardown` as a command word, anywhere in a (possibly
@@ -119,6 +132,8 @@ def _guard_teardown_command(tool_input: dict[str, object], transcript_path: Path
 
 def main() -> int:
     payload = json.load(sys.stdin)
+    if screen_disabled_here(SCREEN_NAME, payload.get("cwd")):
+        return 0
     tool_name = payload.get("tool_name")
     tool_input = payload.get("tool_input") or {}
     transcript_path = Path(payload.get("transcript_path") or "")

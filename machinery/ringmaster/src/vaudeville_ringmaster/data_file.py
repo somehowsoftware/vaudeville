@@ -1,4 +1,4 @@
-"""The Data File slot: discover a Contributor's flat runtime files and collect them into a Unit."""
+"""The Data File slot: discover a Contributor's flat runtime files, collected into an Artifact."""
 
 from __future__ import annotations
 

@@ -21,7 +21,12 @@ def begin_log(log_path: Path | None) -> None:
 def run_claude(invocation: ClaudeInvocation) -> None:
     try:
         if invocation.log_path is None:
-            result = subprocess.run(invocation.argv, cwd=invocation.cwd, check=False)
+            result = subprocess.run(
+                invocation.argv,
+                cwd=invocation.cwd,
+                check=False,
+                stdin=invocation.stdin,
+            )
         else:
             with invocation.log_path.open("ab") as log:
                 result = subprocess.run(
@@ -30,6 +35,7 @@ def run_claude(invocation: ClaudeInvocation) -> None:
                     stdout=log,
                     stderr=subprocess.STDOUT,
                     check=False,
+                    stdin=invocation.stdin,
                 )
     except FileNotFoundError:
         _abort_no_claude()

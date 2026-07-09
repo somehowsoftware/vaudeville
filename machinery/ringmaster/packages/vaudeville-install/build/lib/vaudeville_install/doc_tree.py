@@ -1,7 +1,7 @@
 """Placing a Doc Tree at a Destination: copy the tree, refusing any symlink within it.
 
 The doc-tree slot names live in the [artifact contract](artifact.py); this module is the
-placement side both Build (collecting a tree into the Unit) and Install (placing it at the
+placement side both Build (collecting a tree into the Artifact) and Install (placing it at the
 data dir) use to copy one, with the symlink refusal that a tree of prose should never trip.
 """
 

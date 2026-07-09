@@ -20,6 +20,6 @@ Do not write durations ("a few hours", "a week of work"), framing-level duration
 
 ## Multi-paragraph numbering
 
-**Temporary infrastructure.** Once a turn scrolls out of the TUI's render window, the operator cannot reply to it via the chat alone; `/tmp` works around this by keying responses to paragraph numbers. This rule dissolves when the TUI is replaced.
+Once a turn scrolls out of the TUI's render window, the operator cannot reply to it via the chat alone; `/tmp` works around this by keying responses to paragraph numbers.
 
 Any assistant chat turn beyond one paragraph numbers its paragraphs using the `/tmp` convention: bold-dot markers (`**1.**`, `**2.**`, … or hierarchical `**1.1**`, `**2.3**`), restarting at 1 in every turn. The bold-dot form is mandatory: bare `1.` `2.` at line start parses as a CommonMark ordered list, and the TUI's renderer then collapses blank lines between items; the leading `**` breaks the list-pattern match and forces paragraph spacing. No cross-turn letter prefix; references to prior content restate the substantive claim in prose, so a reader who has scrolled past the prior turn can decode the paragraph on its own. Single-paragraph turns stay unnumbered. Only prose counts as a paragraph, not code blocks, tool calls, or file contents. Separate consecutive numbered paragraphs with a blank line in the source so the numbering's visual grouping survives in the TUI.

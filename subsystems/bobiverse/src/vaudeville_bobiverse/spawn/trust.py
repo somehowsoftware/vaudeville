@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import fcntl
 import json
 import os
 import tempfile
 from pathlib import Path
 from typing import Any
+
+from vaudeville_bobiverse.spawn.file_lock import locked
 
 TRUST_KEY = "hasTrustDialogAccepted"
 
@@ -34,9 +35,7 @@ def record_worktree_trust(worktree: Path, *, config_file: Path) -> None:
     # each rewriting this one shared file; hold an exclusive lock across the
     # read-modify-write and replace atomically so concurrent spawns don't drop
     # each other's trust entries.
-    lock = config_file.with_name(config_file.name + ".lock")
-    with lock.open("w") as handle:
-        fcntl.flock(handle, fcntl.LOCK_EX)
+    with locked(config_file.with_name(config_file.name + ".lock")):
         config = json.loads(config_file.read_text()) if config_file.exists() else {}
         updated = config_trusting_worktree(config, worktree)
         _replace_atomically(config_file, json.dumps(updated, indent=2))

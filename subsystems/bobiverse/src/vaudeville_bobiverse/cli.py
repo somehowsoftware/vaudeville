@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -13,7 +12,6 @@ from vaudeville_bobiverse import prime as prime_mod
 from vaudeville_bobiverse import reseat as reseat_mod
 from vaudeville_bobiverse import unclaim as unclaim_mod
 from vaudeville_bobiverse.data_dir import data_dir
-from vaudeville_bobiverse.prime_fanout import prime_report
 from vaudeville_bobiverse.spawn import launcher, orchestrate, preflight, target_repo
 from vaudeville_bobiverse.teardown import run as run_teardown
 
@@ -116,9 +114,8 @@ def spawn_launcher_command(
         "Run the full /spawn pipeline: preflight, resolve target repo, generate "
         "launcher, invoke `workmux add` from the target repo. Composes the "
         "spawn-* subcommands so /file --spawn can spawn with one call. Before launching "
-        "it resets every managed clone to a clean origin/main (discarding uncommitted "
-        "changes in those clones) and records the new worktree's folder-trust in the "
-        "Claude config ($CLAUDE_CONFIG_DIR, default ~/.claude)."
+        "it records the new worktree's folder-trust in the Claude config "
+        "($CLAUDE_CONFIG_DIR, default ~/.claude)."
     ),
 )
 def spawn_command(
@@ -133,9 +130,8 @@ def spawn_command(
         "Fork an Assignment-less ad-hoc Bob into a Component's primed "
         "Foundation. Like /spawn minus the backlog: no preflight and no Brief, just "
         "an orienting note telling the Bob to wait for the operator's first "
-        "instruction. Resets every managed clone to a clean origin/main and records "
-        "the new worktree's folder-trust, exactly as spawn does. Refuses with exit 2 "
-        "when no Foundation exists for the prefix."
+        "instruction. Records the new worktree's folder-trust, exactly as spawn does. "
+        "Refuses with exit 2 when no Foundation exists for the prefix."
     ),
 )
 def bob_command(
@@ -171,9 +167,10 @@ def spawn_target_repo_command(
         "store under foundations/ that later spawns fork from; the Claude config dir "
         "($CLAUDE_CONFIG_DIR, default ~/.claude) holds the primed session transcripts "
         "under projects/. Re-priming refreshes durable host state, not throwaway scratch, "
-        "unless those env vars redirect the roots to a staged scaffold (the rehearse path). "
+        "unless those env vars redirect the roots to a Rehearsal Installation (the rehearse path). "
         "In the multi-prefix path the Bedrock and each fork stream to "
-        f"{prime_mod.PRIME_LOG_DIR}/prime-<bedrock|prefix>.log so concurrent runs don't interleave."
+        "prime-<bedrock|prefix>.log under a per-run $TMPDIR/vv-prime-<pid>/ directory, so "
+        "concurrent runs neither interleave nor collide across tenants."
     ),
 )
 def prime_command(
@@ -192,15 +189,7 @@ def prime_command(
     if not prefixes:
         print("No Components in ~/.vaudeville/projects.toml; nothing to prime.")
         return
-    stdout_lines, stderr_lines, exit_code = prime_report(
-        prime_mod.prime_all(prefixes, data_files_root=data_files_root, projects_root=projects_root)
-    )
-    for line in stdout_lines:
-        print(line)
-    for line in stderr_lines:
-        print(line, file=sys.stderr)
-    if exit_code != 0:
-        sys.exit(exit_code)
+    prime_mod.main_all(prefixes, data_files_root, projects_root)
 
 
 @app.command(

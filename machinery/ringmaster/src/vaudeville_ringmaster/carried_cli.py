@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 
 import vaudeville_ringmaster
-from vaudeville_ringmaster.apply_plan import ApplyPlan
 from vaudeville_ringmaster.carried_contribution import contribution_carries_a_wheel
 from vaudeville_ringmaster.facade import (
     facade_modules_of,
@@ -14,15 +13,16 @@ from vaudeville_ringmaster.facade import (
     operator_modules_of,
 )
 from vaudeville_ringmaster.facade_distribution import render_facade_distribution
+from vaudeville_ringmaster.manifest import Manifest
 from vaudeville_ringmaster.uv_operations import BuildWheel
 
 INTEGRATOR_NAME = "vaudeville-ringmaster"
 _CARRIED_INSTALLER_SOURCE = Path("packages") / "vaudeville-install"
 
 
-def carry_integrated_cli_into(plan: ApplyPlan, into: Path, build_wheel: BuildWheel) -> None:
+def carry_integrated_cli_into(manifest: Manifest, into: Path, build_wheel: BuildWheel) -> None:
     into.mkdir(parents=True, exist_ok=True)
-    for contribution in plan.contributions:
+    for contribution in manifest.contributions:
         if contribution_carries_a_wheel(contribution):
             build_wheel(contribution.source_root, into)
     with tempfile.TemporaryDirectory() as facade_source:
@@ -30,20 +30,20 @@ def carry_integrated_cli_into(plan: ApplyPlan, into: Path, build_wheel: BuildWhe
         # is traceable to its build rather than frozen at a literal every build serves alike.
         render_facade_distribution(
             Path(facade_source),
-            facade_modules=facade_modules_of(plan),
-            operator_modules=operator_modules_of(plan),
-            distributions=federation_distributions_of(plan),
+            facade_modules=facade_modules_of(manifest),
+            operator_modules=operator_modules_of(manifest),
+            distributions=federation_distributions_of(manifest),
             version=vaudeville_ringmaster.__version__,
         )
         build_wheel(Path(facade_source), into)
-    build_wheel(_carried_installer_source_in(plan), into)
+    build_wheel(_carried_installer_source_in(manifest), into)
 
 
-def _carried_installer_source_in(plan: ApplyPlan) -> Path:
+def _carried_installer_source_in(manifest: Manifest) -> Path:
     # The installer is the integrator's workspace sibling; build it from the integrator's own source
-    # in the Plan (which Stage substitutes with the worktree under rehearsal) so the carried
+    # in the Manifest (which Rehearse substitutes with the worktree under rehearsal) so the carried
     # installer tracks the integrator it ships beside.
-    integrator = next((c for c in plan.contributions if c.name == INTEGRATOR_NAME), None)
+    integrator = next((c for c in manifest.contributions if c.name == INTEGRATOR_NAME), None)
     if integrator is None:
         raise IntegratorContributionMissing(INTEGRATOR_NAME)
     return integrator.source_root / _CARRIED_INSTALLER_SOURCE
@@ -51,4 +51,4 @@ def _carried_installer_source_in(plan: ApplyPlan) -> Path:
 
 class IntegratorContributionMissing(RuntimeError):
     def __init__(self, name: str) -> None:
-        super().__init__(f"Apply Plan has no {name!r} contribution to build the installer from.")
+        super().__init__(f"Manifest has no {name!r} contribution to build the installer from.")

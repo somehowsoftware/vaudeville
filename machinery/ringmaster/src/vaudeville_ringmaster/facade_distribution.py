@@ -1,4 +1,4 @@
-"""Assembles the carried CLI distribution: the `vv` Facade and the `vaudeville` operator CLI.
+"""Composes the carried CLI distribution: the `vv` Facade and the `vaudeville` operator CLI.
 
 Both are dispatchers rendered from one template, differing only in the program name they carry and
 the Contributor app modules they compose. The distribution declares one entry point per surface,

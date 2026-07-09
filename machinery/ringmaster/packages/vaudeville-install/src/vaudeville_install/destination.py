@@ -1,4 +1,4 @@
-"""The Destination Install targets: the operator's Host, or a throwaway Staging stand-in for it."""
+"""The Destination Install targets: the operator's Host, or a throwaway Rehearsal stand-in."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ class Host:
 
 
 @dataclass(frozen=True)
-class Staging:
+class Rehearsal:
     root: Path
     host_home: Path
 
@@ -49,4 +49,4 @@ class Staging:
         )
 
 
-Destination = Host | Staging
+Destination = Host | Rehearsal

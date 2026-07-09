@@ -30,8 +30,8 @@ rectangle "Contributor Repo\n(0..n)"   as repo     <<input>>
 rectangle "Session Clone\n(0..n)"      as clone    <<artifact>>
 rectangle "Worktree"                   as worktree <<input>>
 rectangle "Artifact"                   as artifact <<artifact>>
-rectangle "Host Scaffold"              as host     <<output>>
-rectangle "Staged Scaffold"            as staged   <<output>>
+rectangle "Host Installation"          as host     <<output>>
+rectangle "Rehearsal Installation"     as staged   <<output>>
 rectangle "git"                        as git      <<external>>
 rectangle "uv tool"                    as uv       <<external>>
 rectangle "claude"                     as claude   <<external>>

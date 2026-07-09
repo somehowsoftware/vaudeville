@@ -44,7 +44,7 @@ This pairs with a functional core and an imperative shell: the pure core takes v
 
 ## Main is the production line
 
-[Production by default](#production-by-default) says every line is production code; the corollary at the commit level is that every commit to `main` is a production deposit. Main is what every Bob's spawn pulls from and every release ships from.
+[Production by default](#production-by-default) says every line is production code; the corollary at the commit level is that every commit to `main` is a production deposit. Main is what every Bob's spawn pulls from and every release ships from. A [Track](../vocabulary.md#track)'s branches are tributaries of the same line: a Bob in a named Track pulls and targets its Track's branch under the same no-bypass, PR-gated discipline, and main remains the sole point at which meaning is published to the rest of the constellation.
 
 This forbids the agent merging to main directly, merges that bypass branch protection or review, force-pushes that rewrite history already on main, and fixes merged solely to unblock a downstream step (a pipeline, an integration test) when the right answer is to fix that step.
 

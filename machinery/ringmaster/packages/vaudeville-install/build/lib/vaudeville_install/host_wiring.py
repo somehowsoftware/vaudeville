@@ -1,30 +1,12 @@
-"""Post-apply host-wiring verification: confirm a fresh Host can actually spawn, not just that the
-Artifact was placed.
-
-A successful Install places the scaffold, but ``vv spawn``/``vv fork`` reach past it into the host
-environment: they shell out to ``workmux`` to cut the worktree and tmux window, and they read the
-tenant's YouTrack (the tracker every Assignment lives in) from ``credentials.toml``. On a fresh
-Host either can be missing, and each surfaces only at the first spawn. This check turns those into a
-loud Apply failure, exactly as the command-surface and Foundation probes do for Ringmaster's own
-surface and the Foundations.
-
-The bar is host-environment *wiring*, deliberately not Contributor semantics. YouTrack must be
-*located* (its config present and the instance answering) and Workmux must be *present and
-runnable*. Whether the YouTrack credential actually authenticates, or a real ``workmux add``
-succeeds, are deeper questions owned elsewhere: the credential is the province of vaudeville-core's
-YouTrack client, and exercising ``workmux add`` has side effects. Pulling either in would teach
-Ringmaster a Contributor's internals and give Apply a flakier dependency; both stay out of this
-probe, leaving a clean seam for a future ``vv``-side check to validate them.
-
-Pure over injected capabilities, following the functional-core/imperative-shell split: the core
-predicates take a reach/which/run callable; the composition root (the Apply CLI) supplies the real
-urllib/shutil/subprocess. A test drives every wiring failure with plain fakes.
+"""The Host-wiring Check: confirm a fresh Host can reach what its next steps need, not just that
+the Artifact was placed. Pure over injected authenticate/read-remote/binary-path/workmux-runs
+capabilities; the composition root wires each over the ``child_process`` boundary.
 """
 
 from __future__ import annotations
 
+import re
 import shutil
-import subprocess
 import tomllib
 import urllib.error
 import urllib.request
@@ -32,44 +14,62 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from vaudeville_install.artifact import CREDENTIALS_FILENAME
+from vaudeville_install.child_process import Completed, LaunchFailed, Outcome, Spec, TimedOut
+from vaudeville_install.tenant_config import TenantConfigUnreadable
 
-# A reach probe answers "did the instance respond?": None when located and reachable, else a short
-# reason. A binary-path probe answers "where on PATH is this binary?": its path, or None when the
-# name is not on PATH. Run returns a process exit code. VerifyWiring is the capstone the Apply CLI
-# binds and Apply calls.
-Reach = Callable[[str], "str | None"]
+# Each probe returns None on success, else a short operator-facing reason; a binary-path probe
+# returns the located path, or None when the name is not on PATH.
+Authenticate = Callable[[str, str], "str | None"]
+ReadRemote = Callable[[str], "str | None"]
 BinaryPath = Callable[[str], "str | None"]
-Run = Callable[[list[str]], int]
+WorkmuxRuns = Callable[[], "str | None"]
 VerifyWiring = Callable[[], None]
 
 WORKMUX_BINARY = "workmux"
 # `--version` is the benign functional smoke: it proves the binary is present AND runs (right
 # platform, libraries resolve) without the side effects a real `workmux add` would have.
-WORKMUX_VERSION_PROBE = [WORKMUX_BINARY, "--version"]
+WORKMUX_VERSION_PROBE = (WORKMUX_BINARY, "--version")
 
 YOUTRACK_API_BASE_ENV = "YOUTRACK_API_BASE"
 YOUTRACK_API_KEY_ENV = "YOUTRACK_API_KEY"
+# The least-privilege authenticated endpoint: every token can read its own user, so a 2xx proves
+# the token authenticates and any other response (a 401/403 rejection, a wrong-URL 404) does not.
+YOUTRACK_ME_PATH = "/users/me?fields=login"
 
-_REACH_TIMEOUT_SECONDS = 10.0
+_AUTHENTICATE_TIMEOUT_SECONDS = 10.0
+
+# `scheme://userinfo@` — the credential a remote URL (or a git error echoing one) can carry. Strip
+# the userinfo so no token reaches an operator-facing diagnostic. An ssh `git@host:path` remote has
+# no `://` and is left untouched: its `git@` is a username, not a secret.
+_CREDENTIAL_IN_URL = re.compile(r"(\w[\w+.-]*://)[^/@\s]+@")
 
 
 def verify_host_wiring(
     *,
     api_base: str | None,
     api_key: str | None,
-    reach: Reach,
+    remotes: list[str],
+    authenticate: Authenticate,
+    read_remote: ReadRemote,
     binary_path: BinaryPath,
-    run: Run,
+    workmux_runs: WorkmuxRuns,
 ) -> None:
-    failures = _youtrack_failures(api_base, api_key, reach) + _workmux_failures(binary_path, run)
+    failures = (
+        _youtrack_failures(api_base, api_key, authenticate)
+        + _component_remote_failures(remotes, read_remote)
+        + _workmux_failures(binary_path, workmux_runs)
+    )
     if failures:
         raise HostWiringError(failures)
 
 
-def _youtrack_failures(api_base: str | None, api_key: str | None, reach: Reach) -> list[str]:
+def _youtrack_failures(
+    api_base: str | None, api_key: str | None, authenticate: Authenticate
+) -> list[str]:
     # api_base/api_key arrive pre-resolved by the shell with the same env-over-file precedence
-    # vaudeville-core's client uses, so this verifies the values `vv` will actually read. Reach is
-    # probed only once a base is located; there is nothing to reach otherwise.
+    # vaudeville-core's client uses, so this authenticates the values `vv` will actually read.
+    # Authentication is attempted only once both are located; there is nothing to authenticate
+    # otherwise.
     if not api_base:
         return [
             "YouTrack is not located: neither the YOUTRACK_API_BASE environment variable nor "
@@ -82,16 +82,35 @@ def _youtrack_failures(api_base: str | None, api_key: str | None, reach: Reach) 
             f"nor [youtrack].api_key in {CREDENTIALS_FILENAME}. `vv` cannot authenticate to the "
             "tracker."
         ]
-    unreachable = reach(api_base)
-    if unreachable is not None:
+    rejected = authenticate(api_base, api_key)
+    if rejected is not None:
         return [
-            f"YouTrack is configured at {api_base} but is not reachable: {unreachable}. Confirm "
-            "the URL and the host's network access to the instance."
+            f"YouTrack is configured at {api_base} but the host cannot authenticate to it: "
+            f"{rejected}. Confirm the api_key is a valid token for this instance and the host can "
+            "reach it."
         ]
     return []
 
 
-def _workmux_failures(binary_path: BinaryPath, run: Run) -> list[str]:
+def _component_remote_failures(remotes: list[str], read_remote: ReadRemote) -> list[str]:
+    # Every remote that git cannot read, not just the first: a host missing access to several
+    # remotes should hear about all of them in one install, not one re-run per remote. The remote
+    # is rendered credential-stripped: the Project Map may carry a token in the URL, and a failure
+    # the operator reads must not leak it.
+    failures = []
+    for remote in remotes:
+        unreadable = read_remote(remote)
+        if unreadable is not None:
+            failures.append(
+                f"the Component remote {without_credentials(remote)} is not readable: "
+                f"{unreadable}. Priming clones each Component's remote; wire the host's git "
+                "credentials for the tenant's own Component remotes (a fresh host reaches its own "
+                "private repos, never Vaudeville's) so a read-only `git ls-remote` succeeds."
+            )
+    return failures
+
+
+def _workmux_failures(binary_path: BinaryPath, workmux_runs: WorkmuxRuns) -> list[str]:
     located = binary_path(WORKMUX_BINARY)
     if located is None:
         return [
@@ -99,24 +118,64 @@ def _workmux_failures(binary_path: BinaryPath, run: Run) -> list[str]:
             "the worktree and tmux window, and fail at the first spawn without it. Install Workmux "
             "(https://github.com/raine/workmux)."
         ]
-    exit_code = run(WORKMUX_VERSION_PROBE)
-    if exit_code != 0:
+    unrunnable = workmux_runs()
+    if unrunnable is not None:
         return [
-            f"`{WORKMUX_BINARY}` is on PATH at {located} but does not run "
-            f"(`{' '.join(WORKMUX_VERSION_PROBE)}` exited {exit_code}); the binary may be built "
-            "for the wrong platform or missing its libraries. Reinstall Workmux."
+            f"`{WORKMUX_BINARY}` is on PATH at {located} but does not run ({unrunnable}); the "
+            "binary may be built for the wrong platform or missing its libraries. Reinstall "
+            "Workmux."
         ]
     return []
 
 
-# --- imperative shell: the real capabilities the composition root injects ---
+def build_ls_remote_spec(remote: str, env: Mapping[str, str], timeout: float) -> Spec:
+    # Readability, the read-only twin of Priming's clone: `git ls-remote` takes the same transport
+    # and `credential.helper` path a clone would, so a host that cannot read the remote here cannot
+    # clone it there. The child-process boundary forces GIT_TERMINAL_PROMPT=0 and closes stdin, so a
+    # missing credential fails fast rather than hanging on a prompt no headless host can answer.
+    return Spec(argv=("git", "ls-remote", remote), env=env, timeout=timeout)
+
+
+def interpret_ls_remote(outcome: Outcome) -> str | None:
+    match outcome:
+        case Completed(returncode=0):
+            return None
+        case Completed(returncode=returncode, stderr=stderr):
+            return without_credentials(stderr.strip()) or f"`git ls-remote` exited {returncode}"
+        case TimedOut(timeout=timeout):
+            return f"`git ls-remote` did not answer within {timeout:g}s"
+        case LaunchFailed(reason=reason):
+            return without_credentials(reason)
+
+
+def build_workmux_spec(env: Mapping[str, str], timeout: float) -> Spec:
+    return Spec(argv=WORKMUX_VERSION_PROBE, env=env, timeout=timeout)
+
+
+def interpret_workmux(outcome: Outcome) -> str | None:
+    probe = " ".join(WORKMUX_VERSION_PROBE)
+    match outcome:
+        case Completed(returncode=0):
+            return None
+        case Completed(returncode=returncode, stderr=stderr):
+            detail = stderr.strip()
+            base = f"`{probe}` exited {returncode}"
+            return f"{base}: {detail}" if detail else base
+        case TimedOut(timeout=timeout):
+            return f"`{probe}` did not answer within {timeout:g}s"
+        case LaunchFailed(reason=reason):
+            return reason
+
+
+def without_credentials(text: str) -> str:
+    return _CREDENTIAL_IN_URL.sub(r"\1", text)
 
 
 def locate_youtrack(
     env: Mapping[str, str], credentials_path: Path
 ) -> tuple[str | None, str | None]:
-    """Find (api_base, api_key) the way vaudeville-core's client does: the YOUTRACK_* env vars win,
-    then [youtrack] in credentials.toml fills whatever they leave unset."""
+    # The YOUTRACK_* env vars win, then [youtrack] in credentials.toml fills what they leave unset,
+    # the precedence vaudeville-core's own client resolves by.
     table = _youtrack_table(credentials_path)
     api_base = env.get(YOUTRACK_API_BASE_ENV) or table.get("api_base")
     api_key = env.get(YOUTRACK_API_KEY_ENV) or table.get("api_key")
@@ -126,8 +185,11 @@ def locate_youtrack(
 def _youtrack_table(credentials_path: Path) -> dict[str, str]:
     if not credentials_path.is_file():
         return {}
-    with credentials_path.open("rb") as handle:
-        declaration = tomllib.load(handle)
+    try:
+        with credentials_path.open("rb") as handle:
+            declaration = tomllib.load(handle)
+    except tomllib.TOMLDecodeError as malformed:
+        raise TenantConfigUnreadable(credentials_path, malformed) from malformed
     table = declaration.get("youtrack", {})
     if not isinstance(table, dict):
         return {}
@@ -139,29 +201,22 @@ def binary_path(name: str) -> str | None:
     return shutil.which(name)
 
 
-def urllib_reach(url: str) -> str | None:
-    """Reachability, not authentication: any HTTP response (even 401/404) proves the instance is
-    located and answering, so only a connection-level failure (DNS, refused, timeout, TLS) counts
-    as unreachable. Validating the credential behind a 401 is vaudeville-core's job, not this
-    probe's."""
-    request = urllib.request.Request(url, method="GET")
+def youtrack_authenticated(api_base: str, api_key: str) -> str | None:
+    # A rejected token and an unreachable tracker are reported distinctly, so the operator can tell
+    # "wrong token" from "cannot reach".
+    request = urllib.request.Request(
+        f"{api_base.rstrip('/')}{YOUTRACK_ME_PATH}",
+        method="GET",
+        headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
+    )
     try:
-        urllib.request.urlopen(request, timeout=_REACH_TIMEOUT_SECONDS).close()
-    except urllib.error.HTTPError:
-        return None
-    except (urllib.error.URLError, TimeoutError, OSError) as failure:
-        return str(getattr(failure, "reason", failure) or failure)
+        urllib.request.urlopen(request, timeout=_AUTHENTICATE_TIMEOUT_SECONDS).close()
+    except urllib.error.HTTPError as rejected:
+        return f"the tracker rejected the request (HTTP {rejected.code})"
+    except (urllib.error.URLError, TimeoutError, OSError) as unreachable:
+        reason = getattr(unreachable, "reason", unreachable) or unreachable
+        return f"could not reach the tracker: {reason}"
     return None
-
-
-def workmux_version_returncode(argv: list[str]) -> int:
-    try:
-        completed = subprocess.run(argv, capture_output=True, text=True, check=False)
-    except OSError:
-        # which() resolved the name but exec failed: a wrong-platform or broken binary. Report it
-        # as an unrunnable command rather than letting OSError escape as a traceback.
-        return 127
-    return completed.returncode
 
 
 class HostWiringError(RuntimeError):
@@ -172,8 +227,9 @@ class HostWiringError(RuntimeError):
     def __str__(self) -> str:
         lines = "\n".join(f"  - {failure}" for failure in self.failures)
         return (
-            "Apply placed the Host Scaffold, but the host is not wired for `vv spawn`/`vv fork`:\n"
+            "The install placed the Host Installation, but the host is not wired for what Priming "
+            "and `vv spawn`/`vv fork` need next:\n"
             f"{lines}\n"
-            "The host cannot spawn until these are resolved. Fix the wiring above and re-run "
-            "the host install."
+            "The host cannot be primed or spawned from until these are resolved. Fix the wiring "
+            "above and re-run the host install."
         )

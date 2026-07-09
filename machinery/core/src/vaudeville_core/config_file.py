@@ -38,8 +38,8 @@ def host_config_path(filename: str, host_config_dir: Path | None = None) -> Path
 
 def _default_data_dir() -> Path:
     # The register lives in the data dir, so VV_DATA_DIR redirects it the same way
-    # vaudeville-bobiverse's data_dir honors it; a rehearse pointed at a Staged
-    # Scaffold then reads the candidate's register, not the host's. Empty is unset.
+    # vaudeville-bobiverse's data_dir honors it; a rehearse pointed at a Rehearsal
+    # Installation then reads the candidate's register, not the host's. Empty is unset.
     override = os.environ.get("VV_DATA_DIR")
     base = Path(override) if override else Path.home() / ".vaudeville"
     return base.expanduser().resolve()

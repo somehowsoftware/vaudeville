@@ -82,7 +82,7 @@ class _Collision(_Subcommand):
 
 
 def _print_surface(ctx, param, value):
-    """Emit the composed command surface as JSON for the post-apply integrity check."""
+    """Emit the composed command surface as JSON for the post-deploy Surface Check."""
     if not value or ctx.resilient_parsing:
         return
     names = sorted(ctx.command.list_commands(ctx))

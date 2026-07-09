@@ -18,7 +18,7 @@ def workmux_add_argv(
         "add",
         worktree,
         "--base",
-        "main",
+        "origin/main",
         "--name",
         worktree,
         "--prompt-file",

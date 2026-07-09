@@ -15,13 +15,13 @@ from vaudeville_install.artifact import REGISTRY_FILENAME
 from vaudeville_install.destination import Host
 from vaudeville_install.doc_tree import DocTreeContainsSymlink
 
-from vaudeville_ringmaster import apply as _apply
 from vaudeville_ringmaster import audit as _audit
 from vaudeville_ringmaster import build_operation as _build
 from vaudeville_ringmaster import clone as _clone
+from vaudeville_ringmaster import deploy as _deploy
 from vaudeville_ringmaster import discard as _discard
 from vaudeville_ringmaster import publish as _publish
-from vaudeville_ringmaster import stage as _stage
+from vaudeville_ringmaster import rehearse as _rehearse
 from vaudeville_ringmaster.build_operation import UnsafeBuildTarget
 from vaudeville_ringmaster.exposition import (
     VAUDEVILLE_EXPOSITION_LAYOUT,
@@ -45,7 +45,7 @@ from vaudeville_ringmaster.installer_activation import (
     activate_installer_with_uvx,
 )
 from vaudeville_ringmaster.pin import UnpinnableClone
-from vaudeville_ringmaster.pristine_guard import HotFixedSessionClones
+from vaudeville_ringmaster.pristine_guard import RehearsalFixedSessionClones
 from vaudeville_ringmaster.published_home import (
     PUBLISHED_HOME,
     RINGMASTER_CREDENTIALS_FILENAME,
@@ -56,23 +56,29 @@ from vaudeville_ringmaster.published_home import (
 )
 from vaudeville_ringmaster.registry import load_registry
 from vaudeville_ringmaster.session_clone import MissingSessionClones
-from vaudeville_ringmaster.uv_operations import build_wheel_with_uv, renew_builder_with_uv
+from vaudeville_ringmaster.uv_operations import (
+    WheelBuildFailed,
+    build_wheel_with_uv,
+    self_update_with_uv,
+)
 from vaudeville_ringmaster.worktree import Worktree
 
 app = typer.Typer(no_args_is_help=True)
 
 # Everything a deploy command surfaces to the operator as a clean exit-2 failure rather than a
-# traceback: the Session preconditions Ringmaster checks itself, the carried installer's exit, and
-# Apply's Builder-renewal uv exit (a CalledProcessError, raised after the install completes).
-# Placement, host-wiring, priming, and Foundation failures belong to the installer, which prints
-# its own diagnostic and exits non-zero; that arrives here as InstallerFailed.
+# traceback: the Session preconditions Ringmaster checks itself, the carried installer's exit, a
+# failed Contributor wheel build (WheelBuildFailed, carrying uv's own diagnostic on the error), and
+# Deploy's Self-update uv exit (a bare CalledProcessError, whose diagnostic already streamed to
+# the terminal). Placement, host-wiring, priming, and Foundation failures belong to the installer,
+# which prints its own diagnostic and exits non-zero; that arrives here as InstallerFailed.
 _DEPLOY_ERRORS = (
     DocTreeContainsSymlink,
     MissingSessionClones,
-    HotFixedSessionClones,
+    RehearsalFixedSessionClones,
     UnsafeBuildTarget,
     InstallerNotCarried,
     InstallerFailed,
+    WheelBuildFailed,
     subprocess.CalledProcessError,
 )
 
@@ -120,9 +126,9 @@ def _staged_root_for(worktree_path: Path) -> Path:
     return Path.home() / ".vaudeville" / "staged" / digest
 
 
-def _renew_host_builder(builder_clone: Path) -> None:
+def _self_update(builder_clone: Path) -> None:
     layout = Host(home=Path.home()).layout
-    renew_builder_with_uv(builder_clone, bin_dir=layout.bin_dir, tool_dir=layout.tool_dir)
+    self_update_with_uv(builder_clone, bin_dir=layout.bin_dir, tool_dir=layout.tool_dir)
 
 
 @app.command()
@@ -143,12 +149,12 @@ def build(out: Annotated[Path, typer.Option("--out")]) -> None:
     typer.echo(str(artifact.root))
 
 
-@app.command()
-def stage(worktree: Path) -> None:
-    """Materialize a Release Candidate as a Staged Scaffold via the Artifact's carried installer."""
+@app.command("stage")
+def rehearse(worktree: Path) -> None:
+    """Materialize a Rehearsal Set as a Rehearsal Installation via the carried installer."""
     registry = load_registry(_registry_path())
     with _surfaced_as_exit_2(_DEPLOY_ERRORS):
-        staged = _stage.stage(
+        staged = _rehearse.rehearse(
             registry,
             _session_clones_dir(),
             Worktree(path=worktree),
@@ -161,18 +167,18 @@ def stage(worktree: Path) -> None:
     typer.echo(str(staged))
 
 
-@app.command()
-def apply() -> None:
+@app.command("apply")
+def deploy() -> None:
     """Deploy the Session Clones to the Host via the Artifact's carried installer."""
     registry = load_registry(_registry_path())
     with _surfaced_as_exit_2(_DEPLOY_ERRORS):
-        _apply.apply(
+        _deploy.deploy(
             registry,
             _session_clones_dir(),
             config_dir=_config_dir(),
             build_wheel=build_wheel_with_uv,
             run_installer=activate_installer_with_uvx,
-            renew_builder=_renew_host_builder,
+            self_update=_self_update,
         )
 
 

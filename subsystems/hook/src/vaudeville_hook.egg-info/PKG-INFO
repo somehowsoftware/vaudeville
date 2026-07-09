@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: vaudeville-hook
+Version: 0.1.0
+Summary: The screen: the outside sense that shows a running Bob, and the corpus it commits, what its own loop cannot form.
+Requires-Python: >=3.12
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: mypy>=1.20; extra == "dev"
+Requires-Dist: ruff>=0.4; extra == "dev"

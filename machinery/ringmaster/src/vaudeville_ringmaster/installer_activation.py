@@ -1,6 +1,6 @@
 """Activate a built Artifact's carried installer: the integrator's deploy is the tenant's deploy.
 
-apply and stage build the Artifact, then hand it to its own carried installer rather than placing
+deploy and rehearse build the Artifact, then hand it to its carried installer rather than placing
 it in-process, so every deploy walks the exact ``uvx --from <carried-wheel> vaudeville-install``
 path a tenant runs, and the two cannot drift. The installer inherits the terminal (its priming is
 interactive and may prompt), so a non-zero exit is surfaced as a failure here without capturing the
