@@ -1,0 +1,9 @@
+# Inform, don't command
+
+Agent-facing prose is code the reader runs ([prose is code](./prose-is-code.md)), and that reader is as capable as you, holding what you do not ([davar chadash](../bearing/davar-chadash.md)). So the default posture toward it is to inform: say what you are trying to do and why, and what has already worked, and leave the how to its judgment. Do not script it — *do this, then that* — into an automaton. A reader given only the steps executes the letter and loses the point the moment its situation departs from the one you pictured; a reader that holds the why adapts.
+
+This is not licence to say less. Informing is the harder job. The line is not how much you say but what the reader could rebuild without you: leave it what a peer as able as you would regenerate anyway, the how, and convey at full resolution what it cannot regenerate — the intent, the why, the hard-won what-has-worked ([these goals scale with agent capability](./scaling-with-capability.md)). Withholding those is not informing but under-specifying — scripting's mirror image, both misreading what the reader already holds. The imperative mood is not the tell — a numbered sequence that carries its reasons is still informing. What turns prose into a command is that it withdraws the reader's discretion.
+
+Withdraw it in one case: the act whose wrong call cannot be walked back — the irreversible step, the message already sent — where no judgment the reader brings recovers it, because no result returns to correct against. State the rule flat, and name its reason even so, so the reader holds the line at the next case you did not list.
+
+When instead you are scripting every step because none of them wants the reader's judgment at all, you are not addressing a reader; you are writing code you have not compiled. Send it where rote belongs ([three modes of intervention](./three-modes.md)).

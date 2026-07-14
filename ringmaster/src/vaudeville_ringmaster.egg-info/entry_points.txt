@@ -1,0 +1,3 @@
+[console_scripts]
+ringmaster = vaudeville_ringmaster.cli:app
+vaudeville-installer = vaudeville_install.operator_cli:main

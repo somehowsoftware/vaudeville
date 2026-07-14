@@ -1,0 +1,9 @@
+click>=8.0
+typer>=0.12
+vaudeville-core>=2026.07.13.2
+
+[dev]
+pytest>=7.0
+mypy>=1.20
+ruff>=0.4
+shiv>=1.0

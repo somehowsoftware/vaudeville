@@ -1,2 +1,0 @@
-[console_scripts]
-ringmaster = vaudeville_ringmaster.cli:app

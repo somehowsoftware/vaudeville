@@ -1,0 +1,240 @@
+from __future__ import annotations
+
+import hashlib
+import subprocess
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import date
+from pathlib import Path
+from typing import Annotated
+
+import typer
+from vaudeville_install.artifact import REGISTRY_FILENAME
+from vaudeville_install.destination import Host
+from vaudeville_install.doc_tree import DocTreeContainsSymlink
+
+from vaudeville_ringmaster import audit as _audit
+from vaudeville_ringmaster import build_operation as _build
+from vaudeville_ringmaster import changeset_operation as _changeset
+from vaudeville_ringmaster import clone as _clone
+from vaudeville_ringmaster import deploy as _deploy
+from vaudeville_ringmaster import discard as _discard
+from vaudeville_ringmaster import publish as _publish
+from vaudeville_ringmaster import rehearse as _rehearse
+from vaudeville_ringmaster.build_operation import UnsafeBuildTarget
+from vaudeville_ringmaster.changeset import changeset_as_json
+from vaudeville_ringmaster.exposition import (
+    VAUDEVILLE_DOCTRINE_CONTRIBUTOR,
+    ExpositionContainsSymlink,
+)
+from vaudeville_ringmaster.exposition_commit import (
+    ExpositionCommitFailed,
+    exposition_committer,
+)
+from vaudeville_ringmaster.github_release import (
+    ReleaseCreationFailed,
+    TagListingFailed,
+    release_creator,
+    tags_in,
+)
+from vaudeville_ringmaster.installer_activation import (
+    InstallerFailed,
+    InstallerNotCarried,
+    activate_installer_with_uvx,
+)
+from vaudeville_ringmaster.pin import UnpinnableClone
+from vaudeville_ringmaster.pristine_guard import RehearsalFixedSessionClones
+from vaudeville_ringmaster.published_home import (
+    PUBLISHED_HOME,
+    RINGMASTER_CREDENTIALS_FILENAME,
+    PublishedHomeTokenMissing,
+    ambient_gh_runner,
+    gh_runner,
+    git_runner,
+    published_home_token,
+)
+from vaudeville_ringmaster.registry import load_registry
+from vaudeville_ringmaster.session_clone import MissingSessionClones
+from vaudeville_ringmaster.stale_builder_guard import (
+    IndeterminateBuilderVersion,
+    StaleBuilder,
+    enforce_current_builder,
+)
+from vaudeville_ringmaster.uv_operations import (
+    WheelBuildFailed,
+    build_wheel_with_uv,
+    self_update_with_uv,
+)
+from vaudeville_ringmaster.worktree import Worktree
+
+app = typer.Typer(no_args_is_help=True)
+
+# Everything a deploy command surfaces to the operator as a clean exit-2 failure rather than a
+# traceback: the Session preconditions Ringmaster checks itself (missing clones, a Rehearsal-fixed
+# clone, a stale or unestablishable Builder), the carried installer's exit, a failed Contributor
+# wheel build (WheelBuildFailed, carrying uv's own diagnostic on the error), and Deploy's
+# Self-update uv exit (a bare CalledProcessError, whose diagnostic already streamed to the
+# terminal). Placement, host-wiring, priming, and Foundation failures belong to the installer,
+# which prints its own diagnostic and exits non-zero; that arrives here as InstallerFailed.
+_DEPLOY_ERRORS = (
+    DocTreeContainsSymlink,
+    MissingSessionClones,
+    RehearsalFixedSessionClones,
+    StaleBuilder,
+    IndeterminateBuilderVersion,
+    UnsafeBuildTarget,
+    InstallerNotCarried,
+    InstallerFailed,
+    WheelBuildFailed,
+    subprocess.CalledProcessError,
+)
+
+# Publish reaches the Published Home (listing tags, creating the release, committing the source
+# Exposition), so it surfaces those interaction failures on top of the shared deploy set.
+_PUBLISH_ERRORS = (
+    *_DEPLOY_ERRORS,
+    PublishedHomeTokenMissing,
+    ReleaseCreationFailed,
+    TagListingFailed,
+    ExpositionCommitFailed,
+    ExpositionContainsSymlink,
+    UnpinnableClone,
+)
+
+
+@contextmanager
+def _surfaced_as_exit_2(errors: tuple[type[Exception], ...]) -> Iterator[None]:
+    try:
+        yield
+    except errors as failure:
+        typer.echo(str(failure), err=True)
+        raise typer.Exit(2) from failure
+
+
+def _registry_path() -> Path:
+    # The roster of Contributor Repos is integrator-internal: it ships with Ringmaster as package
+    # data and is read from beside this module, never from the operator's config dir or
+    # ~/.vaudeville, neither of which a fresh deploy can be trusted to hold it.
+    return Path(__file__).parent / REGISTRY_FILENAME
+
+
+def _session_clones_dir() -> Path:
+    return Path.home() / ".vaudeville" / "session-clones"
+
+
+def _config_dir() -> Path:
+    return Path.home() / "vaudeville-config"
+
+
+def _staged_root_for(worktree_path: Path) -> Path:
+    digest = hashlib.sha1(str(worktree_path.resolve()).encode()).hexdigest()[:8]
+    return Path.home() / ".vaudeville" / "staged" / digest
+
+
+def _self_update(builder_clone: Path) -> None:
+    layout = Host(home=Path.home()).layout
+    self_update_with_uv(builder_clone, bin_dir=layout.bin_dir, tool_dir=layout.tool_dir)
+
+
+@app.command()
+def clone() -> None:
+    """Open a deploy Session."""
+    registry = load_registry(_registry_path())
+    _clone.clone(registry, _session_clones_dir())
+
+
+@app.command()
+def build(out: Annotated[Path, typer.Option("--out")]) -> None:
+    """Build the self-installing Artifact to a durable path and print it."""
+    registry = load_registry(_registry_path())
+    with _surfaced_as_exit_2(_DEPLOY_ERRORS):
+        artifact = _build.build(
+            registry, _session_clones_dir(), out, build_wheel=build_wheel_with_uv
+        )
+    typer.echo(str(artifact.root))
+
+
+@app.command("stage")
+def rehearse(worktree: Path) -> None:
+    """Materialize a Rehearsal Set as a Rehearsal Installation via the carried installer."""
+    registry = load_registry(_registry_path())
+    with _surfaced_as_exit_2(_DEPLOY_ERRORS):
+        staged = _rehearse.rehearse(
+            registry,
+            _session_clones_dir(),
+            Worktree(path=worktree),
+            _staged_root_for(worktree),
+            config_dir=_config_dir(),
+            build_wheel=build_wheel_with_uv,
+            run_installer=activate_installer_with_uvx,
+            host_home=Path.home(),
+        )
+    typer.echo(str(staged))
+
+
+@app.command("apply")
+def deploy() -> None:
+    """Deploy the Session Clones to the Host via the Artifact's carried installer."""
+    registry = load_registry(_registry_path())
+    with _surfaced_as_exit_2(_DEPLOY_ERRORS):
+        _deploy.deploy(
+            registry,
+            _session_clones_dir(),
+            config_dir=_config_dir(),
+            build_wheel=build_wheel_with_uv,
+            run_installer=activate_installer_with_uvx,
+            self_update=_self_update,
+            enforce_current_builder=enforce_current_builder,
+        )
+
+
+@app.command()
+def publish() -> None:
+    """Publish the install Artifact and its source Exposition as a versioned release."""
+    registry = load_registry(_registry_path())
+    with _surfaced_as_exit_2(_PUBLISH_ERRORS):
+        # Resolve the elevated token before any work, and present it to every Published Home
+        # interaction through the authenticated runners: gh and git both. Read from the
+        # integrator-internal credentials file, never the deployed credentials.toml. Absent, this
+        # aborts before the clone, build, or commit rather than using the ambient credential.
+        token = published_home_token(_config_dir() / RINGMASTER_CREDENTIALS_FILENAME)
+        run_gh = gh_runner(token)
+        run_git = git_runner(token)
+        _publish.publish(
+            registry,
+            _session_clones_dir(),
+            doctrine_contributor=VAUDEVILLE_DOCTRINE_CONTRIBUTOR,
+            today=date.today(),
+            list_tags=lambda: tags_in(PUBLISHED_HOME, run_gh),
+            build_wheel=build_wheel_with_uv,
+            create_release=release_creator(run_gh),
+            commit_exposition=exposition_committer(run_git),
+            enforce_current_builder=enforce_current_builder,
+        )
+
+
+@app.command()
+def changeset() -> None:
+    """Print the Changeset since the Predecessor: the merged pull requests per Contributor."""
+    registry = load_registry(_registry_path())
+    # The consumer is an agent: a raw traceback hands the surprise to its judgment.
+    assembled = _changeset.assemble_changeset(registry, _session_clones_dir(), ambient_gh_runner())
+    typer.echo(changeset_as_json(assembled))
+
+
+@app.command()
+def discard() -> None:
+    """Close the deploy Session."""
+    _discard.discard(_session_clones_dir())
+
+
+@app.command()
+def audit(
+    staged: Path,
+    reference: Annotated[Path | None, typer.Option("--reference")] = None,
+) -> None:
+    """Walk a Built Scaffold and report structural findings."""
+    findings = _audit.audit_built_scaffold(staged, reference=reference)
+    for finding in findings:
+        typer.echo(f"{finding.severity.value}: {finding.detail}")
+    raise typer.Exit(1 if _audit.findings_are_blocking(findings) else 0)

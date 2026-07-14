@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: vaudeville-cue
+Version: 2026.7.13.8
+Summary: Cue Context: what happens inside a running Bob (the first-turn Brief and the intra-session lifecycle).
+Requires-Python: >=3.14
+Requires-Dist: jinja2>=3.1
+Requires-Dist: typer>=0.12
+Requires-Dist: vaudeville-core>=2026.07.13.2
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: mypy>=1.20; extra == "dev"
+Requires-Dist: ruff>=0.4; extra == "dev"

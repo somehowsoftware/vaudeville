@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="297px" preserveAspectRatio="none" style="width:1511px;height:297px;" version="1.1" viewBox="0 0 1511 297" width="1511px" zoomAndPan="magnify"><defs/><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="530" x="494" y="16.708">Seed-prompt contract: bobiverse / vaudeville-cue boundary</text><!--MD5=[31b4417baef3f92e9fad39bd65141b01]
+cluster vaudeville-bobiverse--><path d="M25,146.9531 L189,146.9531 A4.5,4.5 0 0 1 192,149.9531 L199,169.25 L431,169.25 A3,3 0 0 1 434,172.25 L434,282.9531 A3,3 0 0 1 431,285.9531 L25,285.9531 A3,3 0 0 1 22,282.9531 L22,149.9531 A3,3 0 0 1 25,146.9531 " fill="#F4F4F4" style="stroke: #888888; stroke-width: 1.5;"/><line style="stroke: #888888; stroke-width: 1.5;" x1="22" x2="199" y1="169.25" y2="169.25"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="164" x="26" y="161.9482">vaudeville-bobiverse</text><!--MD5=[c6032a43c325ae9f53401e24a40c7cb1]
+cluster vaudeville-cue--><path d="M854,146.9531 L968,146.9531 A4.5,4.5 0 0 1 971,149.9531 L978,169.25 L1106,169.25 A3,3 0 0 1 1109,172.25 L1109,282.9531 A3,3 0 0 1 1106,285.9531 L854,285.9531 A3,3 0 0 1 851,282.9531 L851,149.9531 A3,3 0 0 1 854,146.9531 " fill="#F4F4F4" style="stroke: #888888; stroke-width: 1.5;"/><line style="stroke: #888888; stroke-width: 1.5;" x1="851" x2="978" y1="169.25" y2="169.25"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="114" x="855" y="161.9482">vaudeville-cue</text><!--MD5=[1b696ac3c7a472e4804cf5f62df94d8d]
+entity spawn--><rect fill="#D0E6F0" height="52.5938" rx="3" ry="3" style="stroke: #2A6A85; stroke-width: 1.5;" width="106" x="38" y="208.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="86" x="48" y="231.9482">«bobiverse»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="50" x="66" y="248.2451">/spawn</text><!--MD5=[1cacb5a8490e30b3bd5ac3ecbdc4ac78]
+entity launcher--><rect fill="#FAF3E0" height="68.8906" rx="3" ry="3" style="stroke: #B08A3A; stroke-width: 1.5;" width="207" x="210.5" y="200.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="64" x="282" y="223.9482">«artifact»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="64" x="220.5" y="240.2451">Launcher</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="187" x="220.5" y="256.542">.scratch/launcher-&lt;id&gt;.md</text><!--MD5=[e3ac43b0c493f7d8a82317496574b65b]
+entity downstream--><rect fill="#E6DFF0" height="68.8906" rx="3" ry="3" style="stroke: #6A4A85; stroke-width: 1.5;" width="226" x="867" y="200.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="44" x="958" y="223.9482">«cue»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="156" x="877" y="240.2451">vv assignment-context</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="206" x="877" y="256.542">([spawn.downstream] default)</text><!--MD5=[bf35e8ddea621d0cbbbfbacf91f1fe96]
+entity workmux--><rect fill="#F0F0F0" height="52.5938" rx="3" ry="3" style="stroke: #888888; stroke-width: 1.5;" width="94" x="1128" y="208.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="74" x="1138" y="231.9482">«external»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="62" x="1144" y="248.2451">workmux</text><!--MD5=[3908db504f15eb564d5f0e12bd7273c1]
+entity agent--><rect fill="#F0F0F0" height="68.8906" rx="3" ry="3" style="stroke: #888888; stroke-width: 1.5;" width="184" x="1316" y="200.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="74" x="1371" y="223.9482">«external»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="113" x="1326" y="240.2451">spawned claude</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="164" x="1326" y="256.542">(bobiverse agent script)</text><!--MD5=[182be3439f628f176d98357b80d92521]
+link spawn to downstream--><path d="M111.37,208.7331 C130.04,186.2931 159.77,155.3531 193,138.9531 C209.35,130.8831 215.33,133.9031 233.5,132.4531 C456.63,114.6631 714.96,166.6631 861.76,203.1131 " fill="none" id="spawn-&gt;downstream" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="866.94,204.4031,859.1831,198.3343,862.0901,203.1871,857.2374,206.0941,866.94,204.4031" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="85" x="234.5" y="119.52">invoke (exec)</text><!--MD5=[acb1dbdcbb7d82a1f8bf3b8ab4572ebd]
+link downstream to spawn--><path d="M953.86,200.7231 C933.29,176.4831 902.27,146.1131 867,132.4531 C807.32,109.3331 787,132.0631 723,132.4531 C605.22,133.1731 302.17,94.7231 193,138.9531 C160.03,152.3131 131.51,181.7931 113.07,204.6831 " fill="none" id="downstream-&gt;spawn" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="109.75,208.8731,118.4836,204.3207,112.863,204.9604,112.2233,199.3399,109.75,208.8731" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="142" x="724" y="119.52">stdout = prompt body</text><!--MD5=[11681030eb5289141e7f7a203f5c8b3d]
+link spawn to launcher--><path d="M144.13,235.4531 C162.5,235.4531 183.81,235.4531 205,235.4531 " fill="none" id="spawn-&gt;launcher" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="210.09,235.4531,201.09,231.4531,205.09,235.4531,201.09,239.4531,210.09,235.4531" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="30" x="162.25" y="228.52">write</text><!--MD5=[fbea47022bad1a38a5b96f328e686569]
+link spawn to workmux--><path d="M110.19,208.6231 C128.51,185.4631 158.39,153.4931 193,138.9531 C345.13,75.0431 399.02,128.0631 564,124.9531 C685.13,122.6731 1002.88,80.5131 1109,138.9531 C1134.56,153.0331 1152.23,181.7331 1162.81,204.1931 " fill="none" id="spawn-&gt;workmux" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="1164.96,208.8831,1164.8656,199.0347,1162.8856,204.3337,1157.5866,202.3538,1164.96,208.8831" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="monospace" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="152" x="565" y="112.02">workmux add --agent</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="62" x="581.5" y="127.1528">(launch +</text><text fill="#000000" font-family="monospace" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="48" x="647.5" y="127.1528">--fork</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="5" x="695.5" y="127.1528">)</text><!--MD5=[1392c03e6862ab7673dfdac0acea4bef]
+link workmux to agent--><path d="M1222.15,235.4531 C1247.54,235.4531 1279.85,235.4531 1310.37,235.4531 " fill="none" id="workmux-&gt;agent" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="1315.65,235.4531,1306.65,231.4531,1310.65,235.4531,1306.65,239.4531,1315.65,235.4531" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="57" x="1240.5" y="228.52">launches</text><!--MD5=[461e0bbad9cb2f5548ea7108ad65d3c7]
+link launcher to agent--><path d="M334.89,200.7731 C352.93,174.4831 381.65,140.3331 417,124.9531 C474.87,99.7831 495.89,124.3031 559,124.9531 C861.71,128.0631 948.32,57.9231 1240,138.9531 C1282.8,150.8431 1326.15,176.1531 1358.1,197.8631 " fill="none" id="launcher-&gt;agent" style="stroke: #A80036; stroke-width: 1.0;"/><polygon fill="#A80036" points="1362.33,200.7631,1357.1662,192.3765,1358.2052,197.9371,1352.6446,198.9762,1362.33,200.7631" style="stroke: #A80036; stroke-width: 1.0;"/><text fill="#000000" font-family="monospace" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="80" x="420.5" y="112.02">&lt; launcher</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="51" x="504.5" y="112.02">on stdin</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="140" x="418" y="127.1528">(first turn, never argv)</text><!--MD5=[67098c45c5d93bc275f70c2ec08114ce]
+@startuml seed-prompt-flow
+
+
+title Seed-prompt contract: bobiverse / vaudeville-cue boundary
+
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam defaultFontName sans-serif
+
+skinparam package {
+  BackgroundColor #f4f4f4
+  BorderColor #888888
+}
+
+skinparam rectangle {
+  BackgroundColor<<bobiverse>>  #d0e6f0
+  BorderColor<<bobiverse>>      #2a6a85
+  BackgroundColor<<cue>>        #e6dff0
+  BorderColor<<cue>>            #6a4a85
+  BackgroundColor<<artifact>>   #faf3e0
+  BorderColor<<artifact>>       #b08a3a
+  BackgroundColor<<external>>   #f0f0f0
+  BorderColor<<external>>       #888888
+}
+
+package "vaudeville-bobiverse" {
+  rectangle "/spawn"                      as spawn      <<bobiverse>>
+  rectangle "Launcher\n.scratch/launcher-<id>.md" as launcher <<artifact>>
+}
+
+package "vaudeville-cue" {
+  rectangle "vv assignment-context\n([spawn.downstream] default)" as downstream <<cue>>
+}
+
+rectangle "workmux" as workmux <<external>>
+rectangle "spawned claude\n(bobiverse agent script)" as agent <<external>>
+
+spawn      -> downstream : invoke (exec)
+downstream -> spawn      : stdout = prompt body
+spawn      -> launcher   : write
+spawn      -> workmux    : ""workmux add - -agent""\n(launch + ""- -fork"")
+workmux    -> agent      : launches
+launcher   -> agent      : ""< launcher"" on stdin\n(first turn, never argv)
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 10:22:07 UTC 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.11+10-1-24.04.2-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

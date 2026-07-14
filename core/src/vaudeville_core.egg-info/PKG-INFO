@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: vaudeville-core
+Version: 2026.7.13.2
+Summary: Anti-corruption layer over Vaudeville's foreign systems: the project tracker, git hosting, and the host config.
+Requires-Python: >=3.14
+Requires-Dist: pydantic>=2
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: mypy>=1.20; extra == "dev"
+Requires-Dist: ruff>=0.4; extra == "dev"
