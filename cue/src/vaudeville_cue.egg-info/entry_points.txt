@@ -1,2 +1,0 @@
-[console_scripts]
-vv-cue = vaudeville_cue.cli:main

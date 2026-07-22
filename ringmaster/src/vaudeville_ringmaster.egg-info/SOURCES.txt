@@ -26,6 +26,7 @@ packages/vaudeville-install/src/vaudeville_install/artifact_completeness.py
 packages/vaudeville-install/src/vaudeville_install/child_process.py
 packages/vaudeville-install/src/vaudeville_install/cli.py
 packages/vaudeville-install/src/vaudeville_install/commissioning.py
+packages/vaudeville-install/src/vaudeville_install/config_origin.py
 packages/vaudeville-install/src/vaudeville_install/data_file_ledger.py
 packages/vaudeville-install/src/vaudeville_install/destination.py
 packages/vaudeville-install/src/vaudeville_install/doc_tree.py
@@ -122,6 +123,7 @@ tests/test_cli.py
 tests/test_cli_declaration.py
 tests/test_clone.py
 tests/test_commissioning.py
+tests/test_config_origin.py
 tests/test_console_script.py
 tests/test_contribution.py
 tests/test_data_file.py

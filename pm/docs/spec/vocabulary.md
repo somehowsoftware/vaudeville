@@ -50,7 +50,7 @@ The resolving Assignment-state transition, in two dispositions: deliver (the del
 
 ## Return
 
-The non-resolving Assignment-state transition: a Bob attempted the Assignment, stopped partway, and hands it back rather than finishing. Returning moves the Assignment to State Active / Workflow Returned, records a return note, and unassigns it so the Assignment re-enters the pickup pool with its partial trail visible to the next picker, without tearing down any worktree. vaudeville-coordinator contributes the `vv return` primitive over vaudeville-core's Returned profile.
+The non-resolving Assignment-state transition: a Bob attempted the Assignment, stopped partway, and hands it back rather than finishing. Returning moves the Assignment to State Active / Workflow Returned and records a return note, so the Assignment re-enters the pickup pool with its partial trail visible to the next picker, without tearing down any worktree. vaudeville-coordinator contributes the `vv return` primitive over vaudeville-core's Returned profile.
 
 ## Route Constraint
 

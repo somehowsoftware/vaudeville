@@ -7,7 +7,3 @@ from pathlib import Path
 def config_dir() -> Path:
     override = os.environ.get("CLAUDE_CONFIG_DIR")
     return Path(override) if override else Path.home() / ".claude"
-
-
-def skills_root() -> Path:
-    return config_dir() / "skills"

@@ -12,6 +12,7 @@ from vaudeville_install.artifact import (
     RESERVED_FILENAMES,
     Artifact,
 )
+from vaudeville_install.config_origin import record_config_origin
 from vaudeville_install.data_file_ledger import (
     prune_data_files_a_prior_install_placed,
     record_placed_data_files,
@@ -134,7 +135,10 @@ def place_config(config_dir: Path, layout: Layout) -> None:
     for name in REQUIRED_TENANT_CONFIG_FILENAMES:
         source = config_dir / name
         try:
-            shutil.copy2(source, data_dir / name)
+            # copy, not copy2: a placed file is dated by the run that placed it. Carrying the
+            # source's mtime across makes "when was this last written" answer for the config dir
+            # instead of the host, which reads as a host untouched since whenever the source was.
+            shutil.copy(source, data_dir / name)
         except FileNotFoundError as missing:
             # A Tenant Config the install must place but the config dir lacks: name the file the
             # operator has to provide rather than let a raw FileNotFoundError escape as a traceback.
@@ -144,7 +148,11 @@ def place_config(config_dir: Path, layout: Layout) -> None:
         shutil.rmtree(placed_docs)
     config_docs = config_dir / PROJECT_DOCS_DIRNAME
     if config_docs.is_dir():
-        shutil.copytree(config_docs, placed_docs)
+        shutil.copytree(config_docs, placed_docs, copy_function=shutil.copy)
+    # Recorded by the one placer, so every path that places the Tenant Config — an install, an
+    # update's activation, a Refresh — leaves the host holding the dir it was placed from, and a
+    # host whose operator supplies the dir once never has to supply it again.
+    record_config_origin(layout, config_dir)
 
 
 def _write_settings(artifact: Artifact, destination: Destination, config_dir: Path) -> None:

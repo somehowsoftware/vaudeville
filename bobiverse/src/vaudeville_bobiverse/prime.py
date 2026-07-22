@@ -8,7 +8,7 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
 
-from vaudeville_core import current_reading_of_component
+from vaudeville_core import current_reading_of_component, list_components
 
 from vaudeville_bobiverse import foundation
 from vaudeville_bobiverse.prime_env import noninteractive_git_env
@@ -216,3 +216,27 @@ def main_all(prefixes: list[str], data_files_root: Path, projects_root: Path) ->
     print_prime_report(
         prime_all(prefixes, data_files_root=data_files_root, projects_root=projects_root)
     )
+
+
+def prime_one_or_all(
+    prefix: str | None,
+    *,
+    data_files_root: Path,
+    projects_root: Path,
+    registered: Callable[[], list[str]] = list_components,
+    prime_one: Callable[[str, Path, Path], None] = main,
+    prime_every: Callable[[list[str], Path, Path], None] = main_all,
+) -> None:
+    # `vv prime BOB` and `vaudeville prime bobiverse` name one Component; a bare
+    # `vv prime` and `vaudeville prime --all` name every registered one. An empty
+    # register primes nothing, said out loud here rather than fanned out over zero
+    # Components. Both surfaces resolve their syntax to a prefix-or-None and share this
+    # one dispatch, so neither carries the one-vs-all rule itself.
+    if prefix is not None:
+        prime_one(prefix, data_files_root, projects_root)
+        return
+    prefixes = registered()
+    if not prefixes:
+        print("No Components in ~/.vaudeville/projects.toml; nothing to prime.")
+        return
+    prime_every(prefixes, data_files_root, projects_root)

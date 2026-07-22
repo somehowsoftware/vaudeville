@@ -8,6 +8,7 @@ from typing import Annotated
 import typer
 
 from vaudeville_install.child_process import run
+from vaudeville_install.config_origin import ConfigOriginUnrecorded, config_origin
 from vaudeville_install.destination import Host
 from vaudeville_install.host_vv import host_vv_environment, streaming_vv_runner
 from vaudeville_install.installer_activation import (
@@ -38,8 +39,9 @@ _DOWNLOAD_TIMEOUT_SECONDS = 1800.0
 # The activation closes on the same Priming a prime runs, so it takes the prime ceiling.
 _ACTIVATE_TIMEOUT_SECONDS = _PRIME_TIMEOUT_SECONDS
 
-_REFRESH_FAILURES = (TenantConfigUnreadable, FoundationsNotPrimed)
+_REFRESH_FAILURES = (TenantConfigUnreadable, FoundationsNotPrimed, ConfigOriginUnrecorded)
 _UPDATE_FAILURES = (
+    ConfigOriginUnrecorded,
     ArtifactDownloadFailed,
     ArtifactAssetNotUnique,
     ArtifactUnpackFailed,
@@ -57,10 +59,6 @@ def _operator() -> None:
     # A no-op root callback so Typer keeps `refresh`/`update` named subcommands rather than
     # collapsing a single-command app into the bare program the `vaudeville` Facade composes.
     return
-
-
-def _default_config_dir() -> Path:
-    return Path.home() / "vaudeville-config"
 
 
 @app.command(
@@ -92,7 +90,7 @@ def refresh(
     )
     try:
         run_refresh(
-            config_dir=config_dir or _default_config_dir(),
+            config_dir=config_origin(config_dir, layout),
             layout=layout,
             prime_vv=prime_vv,
             dry_run=dry_run,
@@ -117,8 +115,8 @@ def update(
         ),
     ] = None,
 ) -> None:
-    config = config_dir or _default_config_dir()
     try:
+        config = config_origin(config_dir, Host(home=Path.home()).layout)
         # The scratch need not outlive the install: the installer copies the Artifact onto the host,
         # and nothing reads back into this workspace afterwards.
         with tempfile.TemporaryDirectory() as workspace:

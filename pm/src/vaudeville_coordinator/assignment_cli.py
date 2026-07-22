@@ -65,6 +65,7 @@ def create(
 def claim(assignment_id: str, *, claim_assignment: Callable[[str], None]) -> None:
     component_from_assignment_id(assignment_id)  # validates id shape; exits on malformed
     claim_assignment(assignment_id)
+    print(f"Claimed {assignment_id} (State Active, Workflow Claimed)")
 
 
 def comment_add(assignment_id: str, body: str, *, add_comment: Callable[[str, str], None]) -> None:

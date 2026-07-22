@@ -222,7 +222,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--config-dir",
         type=Path,
-        default=Path.home() / "vaudeville-config",
+        required=True,
         dest="config_dir",
         help="the tenant's config dir (project map, credentials, project-docs, auto-mode rules)",
     )

@@ -7,14 +7,15 @@ description: >
   ground the premises it rests on against their source, settle the framing with
   `/frame`, draft, purge from the reader's chair, check every line against what
   the reader holds, fill the gaps, and test the result by its effect with
-  `/assay`, redrafting until it carries force. Stops at a finished
-  piece; it does not deliver. The composer the prose path loops over, and the
-  skill you reach for to compose or sharpen a single piece of prose by hand.
+  `/assay`, redrafting until it carries force. When the prose in front of you
+  spans several reader-situations, the partition is your first judgment: cut by
+  reader, and run this composer once per piece. Stops at a finished piece; it
+  does not deliver.
 ---
 
 # Prose
 
-Compose one coherent piece of agent-facing prose, addressed to one reader-situation. When an assignment's prose spans several reader-situations, the prose procedure partitions it and runs this composer once per group; here you hold exactly one piece and one reader.
+Compose one coherent piece of agent-facing prose, addressed to one reader-situation. When the prose in front of you spans several reader-situations, the partition is your first judgment, made before any composing: cut it into pieces that each share a reader, a purpose, and a frame, so that a single framing and a single assay serve each. The cut is by reader, not by file — two files that are one argument to one reader are one piece; one file addressing two genuinely different readers can be two — and often the answer is one piece; let the count follow the work, never a shape imposed on it. Run this composer once per piece. From here down you hold exactly one piece and one reader.
 
 Agent-facing prose is nondeterministic code: another agent acts on the words you wrote, with nothing to go on but those words and what it can observe. It is a force, not information: the reader does something differently because the words pulled it, or the words did nothing. The fewer the words, the more weight each one carries, so the most powerful agent-facing prose is plain, clear, and brief.
 
@@ -74,7 +75,7 @@ None of this is a checklist of claim-kinds to clear: repository claims, contract
 
 Invoke [`/frame`](../frame/SKILL.md) via the Skill tool: bring it the reader and what the prose must achieve, let it consult the right panel from outside your frame, and commit to an approach before you draft. The framing is the angle this piece takes toward its reader; the drafting below is written to it.
 
-That decision is yours to carry, not to clear. The panel's whole job was to diverge from your plan; that it did is the panel working, not a signal to stop. Record the divergence and how you resolved it where the piece is reviewed — for a realization, the pull request its delivery opens — that record is how you surface it, and that review is where the operator weighs what you chose. If what you are about to do could be discharged by stopping and asking the operator, you have mistaken visibility for permission.
+That decision is yours to carry, not to clear. The panel's whole job was to diverge from your plan; that it did is the panel working, not a signal to stop. Record the divergence and how you resolved it where the piece is reviewed — for repository work, the pull request that tenders it — that record is how you surface it, and that review is where the operator weighs what you chose. If what you are about to do could be discharged by stopping and asking the operator, you have mistaken visibility for permission.
 
 Carry the divergence there unless the review can no longer set it right: the change would reach outside that review and cannot be taken back, or it overturns the goal the operator committed to, so review would be anchored to a goal they never chose. Those, return to the operator now; everything else you carry. When unsure, carry: a divergence carried wrongly is caught at review, while one bounced wrongly spends the attention the operator cannot spare.
 
@@ -130,7 +131,7 @@ A prose change is often coupled to a small non-prose edit (a config file, a regi
 
 ## 12. Question the outcome
 
-Survey the whole. Could it be called superficial? Will the agentic review catch a defect you should have caught first? The protocol does not discharge your responsibility: do whatever else it takes to leave your reader able to do what it was sent to do. Then stop: this composer ends at a finished piece. Delivery (the pull request, the convergence) belongs to the procedure that called you, or, when you were run by hand, to you once the piece is right.
+Survey the whole. Could it be called superficial? Will the agentic review catch a defect you should have caught first? The protocol does not discharge your responsibility: do whatever else it takes to leave your reader able to do what it was sent to do. Then stop: this composer ends at a finished piece. Delivery belongs to the goal the piece serves: when every piece the work needs is composed, carry the finished work onward — for repository work, `/tender` takes it to its pull request.
 
 ## On failure
 

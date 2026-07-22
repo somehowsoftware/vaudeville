@@ -37,12 +37,12 @@ The skill is the single closeout entry point. It takes exactly one of the five d
 
 ## Dispositions
 
-| Disposition | State + Workflow      | Assignee  | Comment header         | When to use |
-|-------------|-----------------------|-----------|------------------------|-------------|
-| `delivered` | Delivered / (cleared) | kept      | `## Closeout Synopsis` | Assignment is done: typically a merged PR, sometimes delivered without a PR (tracker-admin, infra-only work). |
-| `abandoned` | Abandoned / (cleared) | cleared   | `## Obsolete Reason`   | Assignment should not exist anymore: a split replaced it, a duplicate resolved the work elsewhere, the underlying need disappeared. Terminal; `isResolved: true`. |
-| `unclaim`   | Ready / Submitted     | cleared   | (none)                 | **Rare.** Procedural-mistake teardown: the worktree should never have existed (wrong-Assignment spawn, duplicate spawn, operator started a Bob by accident). Equivalent of "expunge any record this even happened." Transition-only: no tracker comment, so a successor picker sees an Assignment indistinguishable from one that was never claimed. |
-| `returned`  | Active / Returned     | cleared   | `## Return Note`       | Implementation started, hit a wall, and the agent is handing the Assignment back with a note the next picker reads before restarting. Unresolved; `vv available` still surfaces it. |
+| Disposition | State + Workflow      | Comment header         | When to use |
+|-------------|-----------------------|------------------------|-------------|
+| `delivered` | Delivered / (cleared) | `## Closeout Synopsis` | Assignment is done: typically a merged PR, sometimes delivered without a PR (tracker-admin, infra-only work). |
+| `abandoned` | Abandoned / (cleared) | `## Obsolete Reason`   | Assignment should not exist anymore: a split replaced it, a duplicate resolved the work elsewhere, the underlying need disappeared. Terminal; `isResolved: true`. |
+| `unclaim`   | Ready / Submitted     | (none)                 | **Rare.** Procedural-mistake teardown: the worktree should never have existed (wrong-Assignment spawn, duplicate spawn, operator started a Bob by accident). Equivalent of "expunge any record this even happened." Transition-only: no tracker comment, so a successor picker sees an Assignment indistinguishable from one that was never claimed. |
+| `returned`  | Active / Returned     | `## Return Note`       | Implementation started, hit a wall, and the agent is handing the Assignment back with a note the next picker reads before restarting. Unresolved; `vv available` still surfaces it. |
 | `none`      | (unchanged)           | kept      | (none)                 | Tear down the worktree and end the thread without touching any Assignment. |
 
 ## A disposition is required
@@ -216,13 +216,13 @@ vv resolve abandoned <ASSIGNMENT> --reason "$REASON" || {
 vv teardown
 ```
 
-`vv resolve abandoned` posts an `## Obsolete Reason` comment, transitions State to `Abandoned` and clears Workflow, and clears Assignee; `vv teardown` then launches the detached teardown. Progress is written to `/tmp/teardown-archive.log`.
+`vv resolve abandoned` posts an `## Obsolete Reason` comment, transitions State to `Abandoned` and clears Workflow; `vv teardown` then launches the detached teardown. Progress is written to `/tmp/teardown-archive.log`.
 
 Leave any open PR alone. An abandoned Assignment often has one (open, even CI-green), and discarding the dead work can read as the tidy thing to do, but the PR is the operator's to close, the same as a merge is theirs to make. Transition the Assignment and tear down; do not `gh pr close`.
 
 ### `unclaim`
 
-**Rare.** Procedural-mistake teardown: the worktree should never have been started in the first place. A spawn fired on the wrong Assignment, a duplicate spawn collided with one already in flight, an operator started a Bob by accident. The State/Workflow transition (`Ready` / `Submitted`) and the cleared Assignee leave the Assignment indistinguishable from one that was never picked up; the disposition is the equivalent of "expunge any record this even happened."
+**Rare.** Procedural-mistake teardown: the worktree should never have been started in the first place. A spawn fired on the wrong Assignment, a duplicate spawn collided with one already in flight, an operator started a Bob by accident. The State/Workflow transition (`Ready` / `Submitted`) leaves the Assignment indistinguishable from one that was never picked up; the disposition is the equivalent of "expunge any record this even happened."
 
 The name is the Bob-session word for the action: the operator is *unclaiming* an Assignment that should never have been claimed. The underlying Workflow value is still `Submitted` (the pickup-pool marker the Assignment reverts to), but the disposition argument names the operator's intent rather than the field value because the Workflow term `Submitted` doesn't capture "this Bob shouldn't have existed."
 
@@ -245,7 +245,7 @@ vv unclaim <ASSIGNMENT> || {
 vv teardown
 ```
 
-No `--reason`; the disposition does not write a comment. `vv unclaim` transitions State to `Ready` and Workflow to `Submitted` (idempotent if already in that pair) and clears Assignee; `vv teardown` then launches the detached teardown. The Assignment re-enters `vv available`'s candidate set on the next run.
+No `--reason`; the disposition does not write a comment. `vv unclaim` transitions State to `Ready` and Workflow to `Submitted` (idempotent if already in that pair); `vv teardown` then launches the detached teardown. The Assignment re-enters `vv available`'s candidate set on the next run.
 
 ### `returned`
 
@@ -266,13 +266,13 @@ vv return <ASSIGNMENT> --reason "$NOTE" || {
 vv teardown
 ```
 
-`vv return` posts a `## Return Note` comment (the header is the anchor the next agent looks for), transitions State to `Active` and Workflow to `Returned` (unresolved, `vv available` still surfaces it), and clears Assignee; `vv teardown` then launches the detached teardown.
+`vv return` posts a `## Return Note` comment (the header is the anchor the next agent looks for), transitions State to `Active` and Workflow to `Returned` (unresolved, `vv available` still surfaces it); `vv teardown` then launches the detached teardown.
 
 ### `none`
 
 Tear down the worktree and archive the session without touching any Assignment: the plain teardown, no additional machinery. No transition atom runs and nothing reaches the tracker; the agent simply goes away. Use it when the pane should die and there is no tracker write to make.
 
-**Not** `unclaim`. The two are categorically different, not adjacent: `unclaim` is a tracker transition (it clears the assignee and returns the Assignment to the pickup pool so a successor finds it as if untouched) while `none` touches the tracker not at all. Reach for `unclaim` when an Assignment should go back to the pool; reach for `none` when the only thing that should happen is the session ending.
+**Not** `unclaim`. The two are categorically different, not adjacent: `unclaim` is a tracker transition (it returns the Assignment to the pickup pool so a successor finds it as if untouched) while `none` touches the tracker not at all. Reach for `unclaim` when an Assignment should go back to the pool; reach for `none` when the only thing that should happen is the session ending.
 
 #### Step 1: Print a brief reason to chat
 
@@ -284,4 +284,4 @@ Last chance to communicate. State why the thread is ending; there is no Assignme
 vv teardown
 ```
 
-No transition atom runs; `none` skips the comment + field-transition + Assignee bookkeeping entirely. `vv teardown` launches only the detached worktree archive + `workmux remove --force` teardown.
+No transition atom runs; `none` skips the comment + field-transition bookkeeping entirely. `vv teardown` launches only the detached worktree archive + `workmux remove --force` teardown.

@@ -29,7 +29,7 @@ spike is how you stop being too hazy to `/design`.
 
 ## When not to use
 
-- You already understand the shape. That is `/design`, then `/realize`.
+- You already understand the shape. That is `/design`, then real implementation.
 - You intend to keep the code. Then it is not a spike; it is production work,
   written test-first and clean. Promoting a spike's code as-is skips the rewrite
   the doctrine requires.

@@ -42,6 +42,11 @@ FRAMEWORK_ALLOWANCES: dict[str, list[str]] = {
         "the final step of `vv spawn` and `vv fork`, is allowed: spawning Bobs in auto mode is "
         "Vaudeville's intended, operator-sanctioned execution model, not an attempt to evade an "
         "approval gate.",
+        'Recording a headroom-screen stay with `vv stay "<reason>"`, which writes the stay file '
+        "`.scratch/headroom-stay.json` under the Bob's own worktree, is allowed: the headroom "
+        "screen instructs the Bob to record a stay to stand its soft rungs down, so this is the "
+        "agent following a framework screen's own sanctioned remedy, scoped to its worktree's "
+        "`.scratch/`, not a write outside its work area.",
     ],
 }
 

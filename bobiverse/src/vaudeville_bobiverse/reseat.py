@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from vaudeville_bobiverse.spawn.agent import agent_script_body, propagated_environment
+from vaudeville_bobiverse.spawn.agent import Launch, propagated_environment
 
 PANE_UNRESOLVED_EXIT = 2
 BRIEF_UNREADABLE_EXIT = 3
@@ -30,7 +30,7 @@ def reseat_command(pane: str, agent_script: Path) -> list[str]:
     return ["tmux", "respawn-pane", "-k", "-t", pane, shlex.quote(str(agent_script))]
 
 
-def reseat(worktree: str, brief_path: Path) -> None:
+def reseat(worktree: str, brief_path: Path, model: str | None = None) -> None:
     status = subprocess.run(  # noqa: S603, S607
         ["workmux", "status", worktree, "--json"], capture_output=True, text=True, check=True
     ).stdout
@@ -56,15 +56,17 @@ def reseat(worktree: str, brief_path: Path) -> None:
             file=sys.stderr,
         )
         sys.exit(BRIEF_UNREADABLE_EXIT)
-    # The launch is spawn's, reused verbatim (model, remote-control, autonomy, the env trio),
-    # so the knowledge that births a Bob lives in one place; the only thing reseat does
-    # differently is redirect the Brief onto claude's stdin instead of letting workmux append
-    # the Foundation fork.
+    launch = Launch.compose(
+        worktree=worktree,
+        launch_turn=brief_path,
+        environment=propagated_environment(),
+        model=model,
+    )
     agent_script = brief_path.parent / "reseat-agent.sh"
-    agent_script.write_text(agent_script_body(propagated_environment(), worktree, brief_path))
+    agent_script.write_text(launch.script())
     agent_script.chmod(0o755)
     subprocess.run(reseat_command(pane, agent_script), check=True)  # noqa: S603, S607
 
 
-def main(worktree: str, brief_path: str) -> None:
-    reseat(worktree, Path(brief_path))
+def main(worktree: str, brief_path: str, model: str | None = None) -> None:
+    reseat(worktree, Path(brief_path), model)

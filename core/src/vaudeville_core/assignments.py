@@ -61,6 +61,7 @@ class Assignment:
     route: str
     state_resolved: bool
     signed_off: bool
+    authored_by_operator: bool
     deps_inward: tuple[AssignmentRef, ...]
     deps_outward: tuple[AssignmentRef, ...]
     subtask_inward: tuple[AssignmentRef, ...]
@@ -87,6 +88,7 @@ def make_assignment(
     route: str = "check-in",
     state_resolved: bool = False,
     signed_off: bool = False,
+    authored_by_operator: bool = False,
     deps_inward: tuple[AssignmentRef, ...] = (),
     deps_outward: tuple[AssignmentRef, ...] = (),
     subtask_inward: tuple[AssignmentRef, ...] = (),
@@ -113,6 +115,7 @@ def make_assignment(
         route=route,
         state_resolved=state_resolved,
         signed_off=signed_off,
+        authored_by_operator=authored_by_operator,
         deps_inward=deps_inward,
         deps_outward=deps_outward,
         subtask_inward=subtask_inward,

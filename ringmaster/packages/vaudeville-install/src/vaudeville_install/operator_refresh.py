@@ -27,10 +27,10 @@ def run_refresh(
 ) -> None:
     plan = refresh_plan_for(config_dir, layout)
     if dry_run:
-        report(dry_run_report(plan))
+        report(dry_run_report(plan, config_dir))
         return
     if plan.reprime_needed and not assume_yes and not confirm(reprime_prompt(plan)):
         report("Refresh cancelled; nothing was changed.")
         return
     apply_refresh_plan(plan, config_dir, layout, prime_vv)
-    report(applied_report(plan))
+    report(applied_report(plan, config_dir))

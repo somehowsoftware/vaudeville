@@ -17,6 +17,7 @@ from vaudeville_core.assignments import (
     sort_key,
 )
 from vaudeville_core.bookkeeping import apply_bookkeeping, apply_transition
+from vaudeville_core.component import Component
 from vaudeville_core.config_file import (
     component_from_assignment_id,
     component_from_name,
@@ -65,6 +66,7 @@ __all__ = [
     "Comment",
     "Assignment",
     "AssignmentRef",
+    "Component",
     "__version__",
     "add_comment",
     "add_depend",

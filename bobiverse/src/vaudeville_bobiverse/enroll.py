@@ -84,7 +84,7 @@ def enroll(
     remote: str | None,
     short_name: str | None,
     description: str | None,
-    host_config_dir: Path,
+    authored_config_dir: Path,
     provision_project: Callable[[str, str], str] = provision,
     register: Callable[..., None] = register_component,
     report: Callable[[str], None] = print,
@@ -119,10 +119,11 @@ def enroll(
             remote=canonical_remote,
             name=name,
             short_name=short_name,
+            code_review=True,
         ),
-        host_config_dir=host_config_dir,
+        authored_config_dir=authored_config_dir,
     )
-    report(f"Registered {prefix} in vaudeville.toml.")
+    report(f"Registered {prefix} in the register under {authored_config_dir}.")
 
     _report_scaffold(report, kind, scaffold(repo_path, skeleton))
     _report_prime_tail(report, prefix)
@@ -145,8 +146,10 @@ def _report_scaffold(
 
 def _report_prime_tail(report: Callable[[str], None], prefix: str) -> None:
     report(
-        f"Next: commit and push the scaffold to {prefix}'s origin, then run "
-        f"`vaudeville prime {prefix}` to build its Foundation."
+        f"Next: commit and push the register entry, then run `vaudeville refresh` on each "
+        f"host — until a host refreshes, {prefix} is not registered there. Commit and push "
+        f"the scaffold to {prefix}'s origin, then run `vaudeville prime {prefix}` to build "
+        f"its Foundation."
     )
 
 

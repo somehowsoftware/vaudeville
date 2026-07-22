@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from vaudeville_cue import assignment_context, component_register, parlay_record, parlay_watch
+from vaudeville_cue import assignment_context, component_register
 from vaudeville_cue.checkpoint import run_checkpoint, run_digest
 
 app = typer.Typer(
@@ -74,136 +74,17 @@ def digest_command() -> None:
         "the Resume Brief, persists all three at the worktree root, then launches a "
         "detached `reseat` (bobiverse's primitive) that replaces this pane's "
         "session in place, seeding the fresh session with the Brief as its first turn. "
-        "Refuses before the irreversible reseat when --resume names an undeployed "
-        "skill, the Carryover is empty, or the session transcript cannot be resolved."
+        "Refuses before the irreversible reseat when the Carryover is empty or the "
+        "session transcript cannot be resolved."
     ),
 )
 def checkpoint_command(
-    resume: Annotated[
-        str | None,
-        typer.Option(
-            "--resume",
-            help="Continuation skill the Resume Brief closes into, without the leading "
-            "slash (e.g. _continue_full_process). Omit for a bare checkpoint: the "
-            "Brief closes with the work the Carryover names.",
-        ),
-    ] = None,
     worktree_name: Annotated[
         str | None,
         typer.Option(help="Worktree whose pane to drive (default: the one cwd is inside)."),
     ] = None,
 ) -> None:
-    run_checkpoint(resume, worktree_name, carryover=sys.stdin.read())
-
-
-@app.command(
-    name="parlay-watch",
-    help=(
-        "Sense one PR for a convergence round and report only what the judge needs to act: the "
-        "convergence verdict, how many new reviewer comments arrived (written verbatim to a file "
-        "for the digest's discarded context, never echoed here), CI status with a handle to its "
-        "raw log, mergeability, the reviewer's disposition, and the running round count, advanced "
-        "whenever the PR head has moved since the last sense. Waits for Codex to rule on the head, "
-        "up to "
-        "--interval per call, before reporting; once the wait for a review exhausts the loop's "
-        "patience a settled PR converges on the reviewer's silence. The raw CI log and the full "
-        "comment history stay out of the judge's context by construction."
-    ),
-)
-def parlay_watch_command(
-    pr: Annotated[int, typer.Argument(help="PR number to converge.")],
-    repo: Annotated[
-        str | None,
-        typer.Option(help="owner/repo of the PR (default: the current repository)."),
-    ] = None,
-    interval: Annotated[
-        float, typer.Option(help="Upper bound, in seconds, on a single call's wait for Codex.")
-    ] = 270.0,
-    max_iterations: Annotated[
-        int,
-        typer.Option(help="Pass cap; the summary reports stop:yes once the loop reaches it."),
-    ] = 20,
-) -> None:
-    parlay_watch.run_watch(pr, repo, interval, max_iterations)
-
-
-@app.command(
-    name="parlay-record",
-    help=(
-        "Dispose of one reviewer comment: post the disposition reply to it (what changed and why "
-        "the underlying problem is gone, or the reasoning for changing no code) and clear it from "
-        "the open queue, in one act so the reply can never be dropped. The reply threads under an "
-        "inline review comment; a conversation comment or a review body gets a new PR comment. A "
-        "fix passes --fix-sha with the commit that answered the comment, which the next "
-        "parlay-watch sense reads to mark that round reviewer-forced; a reasoned rejection passes "
-        "--rejected, changes no code, and counts toward no forced round."
-    ),
-)
-def parlay_record_command(
-    pr: Annotated[int, typer.Argument(help="PR number being converged.")],
-    comment_id: Annotated[int, typer.Argument(help="The reviewer comment id being disposed of.")],
-    reply: Annotated[str, typer.Option(help="The disposition reply posted to the comment.")],
-    repo: Annotated[
-        str | None,
-        typer.Option(help="owner/repo of the PR (default: the current repository)."),
-    ] = None,
-    fix_sha: Annotated[
-        str | None,
-        typer.Option(
-            "--fix-sha",
-            help="Sha of the commit that answered this comment (the fix just committed and "
-            "pushed). Required for a fix; the next parlay-watch sense reads it off the moved head "
-            "to count a reviewer-forced round. Omit only with --rejected.",
-        ),
-    ] = None,
-    rejected: Annotated[
-        bool,
-        typer.Option(
-            "--rejected",
-            help="Record a reasoned rejection that changes no code, rather than a fix. Mutually "
-            "exclusive with --fix-sha; a rejection counts toward no forced round.",
-        ),
-    ] = False,
-) -> None:
-    parlay_record.run_record(pr, repo, comment_id, reply, fix_sha=fix_sha, rejected=rejected)
-
-
-@app.command(
-    name="parlay-begin",
-    help=(
-        "Bring a PR's head under parlay watch the moment it is opened, stamping the head-currency "
-        "clock from the system clock now. Run by _tender right after the PR is created, so a fast "
-        "Codex sign-off arriving before the first post-checkpoint sense is judged against a clock "
-        "already running, not one that starts after it."
-    ),
-)
-def parlay_begin_command(
-    pr: Annotated[int, typer.Argument(help="PR number just opened.")],
-    repo: Annotated[
-        str | None,
-        typer.Option(help="owner/repo of the PR (default: the current repository)."),
-    ] = None,
-) -> None:
-    parlay_record.run_begin(pr, repo)
-
-
-@app.command(
-    name="parlay-waive",
-    help=(
-        "Lift a tripped three-round escalation, so the convergence loop resumes past a stop "
-        "an independent committee's read has judged not a fatal misframing. The round "
-        "count is left standing, not zeroed, so a later third forced round past the "
-        "waiver escalates again — a second trip is a louder alarm, not a fresh start."
-    ),
-)
-def parlay_waive_command(
-    pr: Annotated[int, typer.Argument(help="PR number whose escalation to waive.")],
-    repo: Annotated[
-        str | None,
-        typer.Option(help="owner/repo of the PR (default: the current repository)."),
-    ] = None,
-) -> None:
-    parlay_record.run_waive(pr, repo)
+    run_checkpoint(worktree_name, carryover=sys.stdin.read())
 
 
 def main() -> None:

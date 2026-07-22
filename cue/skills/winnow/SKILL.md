@@ -65,15 +65,12 @@ Spawn a clean-context subagent and feed it [`gate.md`](gate.md) verbatim, follow
 
 For each one it flags, do the owed escalation: route the comment back into steps 2 and 3 of the tree — make the code carry the intent (enforce the invariant, restructure so the order is manifest, add the behavioral test), then delete the comment. The gate names the finding; the escalation is winnow's own work, the same work step 1 routes there. Do not argue the flag away: a clean-context reader quoting an unenforced intent is the signal step 1 is built to act on, not a second opinion to weigh against your own. Trust the gate on the fig leaf, and only the fig leaf — it does not judge your cuts, your renames, or the surface you chose, so a "none" is not licence and a flag beyond the fig-leaf pattern is not its to give.
 
-A gate escalation changes code, so it lands the pass in the code branch of the exit below: the diff under review has changed, and it converges through `/parlay`.
+A gate escalation changes code, and that changed code is still the winnow's own work: it leaves through the same exit below, inside the pass's one commit.
 
 ## The pass ends on the remote
 
 An unpushed winnow is indistinguishable from one that never ran: the operator reads the pass's work on the remote, never in your working tree. Finishing the edits is therefore not finishing the pass.
 
-Commit the edits as their own commit — the winnow's work and nothing else, so the pass reads as one diff — and push. Size does not modulate this: a one-character edit is still read on the remote. Then:
+Commit the edits as their own commit — the winnow's work and nothing else, so the pass reads as one diff — and carry it out as a revision of the tendered PR, per `tender`'s revision SOP: local CI first (a comment edit can still break a lint gate), a new commit, push; the pull request updates to the new head, and tender's CI watch gives the verdict. Size does not modulate this: a one-character edit is still read on the remote.
 
-- **If any edit reached the code** (a rename, a factoring change, a re-implementation): the diff under review has changed. Invoke `/parlay` to converge it.
-- **If the edits stayed within comments and documentation**: push, confirm the pushed commit's CI completes green (a comment edit can still break a lint gate), and stop; there is nothing for a reviewer to re-converge.
-
-When winnow runs inside a procedure that ends in a tender, that tender is this exit and carries the convergence. Only the operator's own instruction — a "don't push it yet" in the invocation — holds any of it back.
+When the work has not yet been tendered, the tender ahead is this exit: the winnow's commit rides to the pull request with the rest of the work. Only the operator's own instruction — a "don't push it yet" in the invocation — holds any of it back.

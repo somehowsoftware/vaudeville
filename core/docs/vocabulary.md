@@ -34,11 +34,15 @@ Standing a Component's tracker up to the [Tracker schema](#tracker-schema): the 
 
 ## ExitProfile
 
-The State + Workflow + Assignee transition kit a closing skill drives an Assignment through. Each profile binds a (State, Workflow) pair, whether to unassign, and a comment-header convention: empty when the close leaves no tracker comment. vaudeville-core exposes four: **DELIVERED**, **ABANDONED**, and **RETURNED** for the terminal dispositions, and **UNCLAIM** for releasing a claim back to the pickup pool. A closing skill maps each of its dispositions onto a profile; a disposition that leaves no tracker trail drives none. The bound (State, Workflow) values are themselves UL: `Delivered`, `Abandoned`, `Returned`, `Active`, `Ready`, and `Submitted` are values of the cross-context State and Workflow vocabularies.
+The State + Workflow transition kit a closing skill drives an Assignment through. Each profile binds a (State, Workflow) pair and a comment-header convention: empty when the close leaves no tracker comment. vaudeville-core exposes four: **DELIVERED**, **ABANDONED**, and **RETURNED** for the terminal dispositions, and **UNCLAIM** for releasing a claim back to the pickup pool. A closing skill maps each of its dispositions onto a profile; a disposition that leaves no tracker trail drives none. The bound (State, Workflow) values are themselves UL: `Delivered`, `Abandoned`, `Returned`, `Active`, `Ready`, and `Submitted` are values of the cross-context State and Workflow vocabularies.
 
 ## Bookkeeping
 
-The composite write that closes an Assignment: post the synopsis comment, patch State/Workflow/Assignee. `apply_bookkeeping` does both; `apply_transition` does only the field write (the no-record path used for dispositions whose semantic is "leave no tracker trail"). Every Contributor that closes an Assignment drives the close through one of these two entry points.
+The composite write that closes an Assignment: post the synopsis comment, patch State and Workflow. `apply_bookkeeping` does both; `apply_transition` does only the field write (the no-record path used for dispositions whose semantic is "leave no tracker trail"). Every Contributor that closes an Assignment drives the close through one of these two entry points.
+
+## Component register
+
+The tenant's declaration of which Components its Project has, keyed by Assignment prefix, each with its tracker project, repository path, and name: what core reads to answer every "which Component" question, and the only thing a Component's existence consists of. The tenant authors it in version-controlled configuration, and each host materializes a copy under its data dir that the next refresh overwrites. Reads take a copy, since that is the register a host has; a registration lasts only in the authored one.
 
 ## Current reading
 

@@ -16,7 +16,7 @@ Three systems sit on the far side of the boundary; consumers reach each only thr
 
 **git hosting** is reached two ways: a Current reading hands a caller a registered Component's canonical source for the span of one read (a fresh clone of its remote tip) and the working-tree resolver names the current Component from a git root. Neither a clone URL nor a temporary path surfaces to the caller.
 
-**The host config file** (`~/.vaudeville/vaudeville.toml`) is the tenant's Component register, read behind a private grammar that never escapes the module. It answers which Components the tenant has, keyed by Assignment prefix, translating the file's spellings into domain values.
+**The host config file** is the tenant's [Component register](vocabulary.md#component-register), read behind a private grammar that never escapes the module. It answers which Components the tenant has, keyed by Assignment prefix, translating the file's spellings into domain values. Reads take the host's copy (`~/.vaudeville/vaudeville.toml`) by default, since that is the register a host has; the one write takes the directory of the authored register and no default, because a registration written to the copy does not survive the next refresh.
 
 ## Consumers
 

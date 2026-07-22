@@ -73,7 +73,7 @@ operator's turns above already settled.
 
 """
 
-# Appended to both Continue variants: the creation-gate. Anchored to observable
+# Appended to the Continue section: the creation-gate. Anchored to observable
 # actions (not a feeling) because the eval evidence showed the failure lives at
 # durable-artifact-creation moments, where an action can trigger a check and an
 # instruction to "re-read when you lean on a term" measurably cannot.
@@ -95,7 +95,7 @@ new language or new structure is legitimate work when the ontology has a real
 gap — but only after reading the ontology it would extend.
 """
 
-_CONTINUE_BARE = (
+_CONTINUE = (
     """\
 
 ## 3. Continue
@@ -114,26 +114,38 @@ already authorize it, carry the work to that edge, surface, and wait.
     + _CREATION_GATE
 )
 
-_CONTINUE_LIFECYCLE = (
+# The closing swapped in when the chain has run away: consecutive sessions shed with no
+# operator turn and no commit landed. Unlike Continue, this posture holds the next action
+# rather than taking it, because the danger is precisely a chain that keeps acting
+# unwatched. Anchored to a concrete first move (report, then wait) because an instruction
+# to "be careful about depth" is inert where one to open with a status turn and stop is
+# not — the same reason the creation gate names actions, not feelings.
+_SURFACE_AND_WAIT = (
     """\
 
-## 3. Continue
+## 3. Surface, then wait
 
-You checkpointed on the way into a lifecycle skill; its body carries the
-procedure for the work ahead. Invoke the Skill tool with skill `{continuation}`
-now; grounded by this Brief, it picks up mid-stride. As it runs, the operator's
-turns above stay the account: if something you check comes back against what they
-established, surface that clash before acting on it. Continuing grants no new
-license: the reseat changed your context, not your authority.
+Do not resume mid-stride, and do not take the Carryover's next action yet. This
+Bob reached this checkpoint having shed the conversation with no word from the
+operator and no commit landed, and it is not the first such shed in a row: the
+chain has been compressing itself — lossily, and past any undo — while nobody
+watched and nothing landed. That is how a thread drifts beyond recovery, so this
+checkpoint hands the next move back to the operator rather than spending another
+unwitnessed compression.
+
+Your one action this turn is to surface. Tell the operator, in the domain's own
+words, where the work actually stands: what is settled, what the recent sessions
+produced or failed to, and the single next step you would take if cleared to go
+on. Name that the chain reached its depth bound with no operator contact and no
+commit, so they can see why you stopped. Then wait. Resuming is the operator's
+call to release, not yours to assume — this surface exists for exactly the
+failure the Bob cannot feel from inside it, a silent chain that reads as progress
+while it drifts, so pressing on unbidden is the one move it forbids.
 """
     + _CREATION_GATE
 )
 
 
-def resume_brief(digest: str, carryover: str, continuation: str | None) -> str:
-    closing = (
-        _CONTINUE_BARE
-        if continuation is None
-        else _CONTINUE_LIFECYCLE.format(continuation=continuation)
-    )
+def resume_brief(digest: str, carryover: str, *, surface_and_wait: bool = False) -> str:
+    closing = _SURFACE_AND_WAIT if surface_and_wait else _CONTINUE
     return _GROUNDING_FRAME + digest + _CARRYOVER_FRAME + carryover + closing

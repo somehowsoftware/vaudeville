@@ -24,6 +24,12 @@ def _template_environment(package_path: str) -> Environment:
 _route_environment = _template_environment("templates")
 _kind_environment = _template_environment("kind_templates")
 
+# The realization brief: the boundary facts a Bob needs at the moment its goal settles, shared by
+# the templates whose Bob carries work to done (check-in, direction, execute). It lives in its own
+# loader and reaches those templates as a rendered variable, not an include, so it can never be
+# resolved through the Route lookup the way a template sharing the Route loader could.
+_shared_environment = _template_environment("shared_templates")
+
 # A kind here renders its own first turn, selected by kind, outside the Route namespace; a Premise
 # is absent because it renders by Route instead.
 _KIND_TEMPLATES = {
@@ -62,6 +68,8 @@ def render(assignment: Assignment) -> str:
         command_route_gloss=_command_route_gloss(assignment),
         command_check_in=assignment.type == "Command" and assignment.route == "check-in",
         signed_off=assignment.signed_off,
+        authored_by_operator=assignment.authored_by_operator,
+        realization_brief=_shared_environment.get_template("realization.jinja").render(),
     )
 
 

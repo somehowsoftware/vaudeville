@@ -6,7 +6,7 @@ from pathlib import Path
 
 from vaudeville_bobiverse import claude_projects
 from vaudeville_bobiverse.data_dir import data_dir
-from vaudeville_bobiverse.spawn import clearing, standup, trust
+from vaudeville_bobiverse.spawn import agent, clearing, standup, trust
 from vaudeville_bobiverse.spawn.refusal import Refusal, refuse, refuse_or_clear
 
 ADHOC_NOTE = (
@@ -38,24 +38,30 @@ def fork_adhoc_bob(
     data_files_root: Path,
     projects_root: Path,
     claude_config_file: Path,
+    model: str | None = None,
 ) -> None:
     # No preflight here: preflight weighs an Assignment, and an ad-hoc Bob has none.
     outcome = refuse_or_clear(clearing.SPAWN_CLEARANCES, clearing.Clearing(prefix, data_files_root))
     if isinstance(outcome, Refusal):
         refuse(outcome)
     ready = outcome.cleared()
+    launch = agent.Launch.compose(
+        worktree=adhoc_worktree_name(prefix, uuid.uuid4().hex[:6]),
+        launch_turn=write_adhoc_note(),
+        environment=agent.propagated_environment(),
+        model=model,
+    )
     standup.stand_up_session(
         ready.foundation_session,
         target=ready.target,
-        worktree=adhoc_worktree_name(prefix, uuid.uuid4().hex[:6]),
-        prompt_file=write_adhoc_note(),
+        launch=launch,
         config_file=claude_config_file,
         projects_root=projects_root,
         data_files_root=data_files_root,
     )
 
 
-def bob(prefix: str) -> None:
+def bob(prefix: str, model: str | None = None) -> None:
     # The single composition root for bob: `vv bob` and `vaudeville bob` both
     # enter here, resolving the host's real locations in one place the way
     # spawn's composition root does.
@@ -64,4 +70,5 @@ def bob(prefix: str) -> None:
         data_files_root=data_dir(),
         projects_root=claude_projects.projects_root(),
         claude_config_file=trust.claude_config_file(),
+        model=model,
     )

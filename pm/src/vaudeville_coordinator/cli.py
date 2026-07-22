@@ -87,7 +87,7 @@ def resolve_command(
 @app.command(
     name="return",
     help=(
-        "Return an Assignment to the pickup pool (Active/Returned + return note), unassigned. "
+        "Return an Assignment to the pickup pool (Active/Returned + return note). "
         "Does not tear down the worktree."
     ),
 )

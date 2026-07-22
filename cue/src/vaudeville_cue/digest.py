@@ -24,6 +24,11 @@ class Section:
     source: str
     turns: tuple[OperatorTurn, ...]
     remnants: tuple[UnconfirmedQueuedMessage, ...] = ()
+    # The commit the worktree sat at when this session checkpointed. A reseat leaves the
+    # worktree untouched, so a section's head is exactly where the next session begins —
+    # the invariant that lets the chain read a moved head as a landed commit. None where
+    # none resolves (a legacy store, an unborn HEAD).
+    head: str | None = None
 
 
 def accumulate(prior: Sequence[Section], latest: Section) -> tuple[Section, ...]:

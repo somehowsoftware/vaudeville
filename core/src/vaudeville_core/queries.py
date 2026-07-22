@@ -74,7 +74,8 @@ def find_assignments(
         resolved=resolved,
     )
     raw_issues = _youtrack.search(query, _issue_adapter.FIELDS)
-    return [_assignment_from_issue(issue) for issue in raw_issues]
+    token_account = token_account_login()
+    return [_assignment_from_issue(issue, token_account) for issue in raw_issues]
 
 
 def get_assignment_request(assignment_id: str) -> Request:
@@ -92,10 +93,19 @@ def get_assignment(assignment_id: str) -> Assignment:
     if issue is None:
         print(f"Error: assignment {assignment_id!r} not found.", file=sys.stderr)
         sys.exit(1)
-    return _assignment_from_issue(issue)
+    return _assignment_from_issue(issue, token_account_login())
 
 
-def _assignment_from_issue(issue: dict[str, Any]) -> Assignment:
+def token_account_request() -> Request:
+    return Request("GET", "/users/me", params={"fields": "login"})
+
+
+def token_account_login() -> str:
+    account = _youtrack.perform(token_account_request())
+    return str((account or {}).get("login") or "")
+
+
+def _assignment_from_issue(issue: dict[str, Any], token_account: str = "") -> Assignment:
     """Adapt a raw YouTrack issue dict to an Assignment. CORE-internal."""
     buckets: dict[tuple[str, str], list[AssignmentRef]] = {
         ("Depend", "INWARD"): [],
@@ -130,6 +140,7 @@ def _assignment_from_issue(issue: dict[str, Any]) -> Assignment:
         route=_issue_adapter.field_name(issue, "Route"),
         state_resolved=_issue_adapter.state_resolved(issue),
         signed_off=_issue_adapter.signed_off(issue),
+        authored_by_operator=_issue_adapter.authored_by_operator(issue, token_account),
         deps_inward=tuple(buckets[("Depend", "INWARD")]),
         deps_outward=tuple(buckets[("Depend", "OUTWARD")]),
         subtask_inward=tuple(buckets[("Subtask", "INWARD")]),

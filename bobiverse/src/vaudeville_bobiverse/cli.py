@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from vaudeville_core import component_from_cwd, list_components
+from vaudeville_core import component_from_cwd
 
 from vaudeville_bobiverse import bob as bob_mod
 from vaudeville_bobiverse import claude_projects, foundation, foundation_verify
@@ -55,15 +55,19 @@ def teardown_command(
 def reseat_command(
     worktree: Annotated[str, typer.Argument(help="Worktree (pane) to reseat.")],
     brief: Annotated[str, typer.Argument(help="Path to the composed Resume Brief.")],
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Model the reseated session runs on (default: opus)."),
+    ] = None,
 ) -> None:
-    reseat_mod.reseat(worktree, Path(brief))
+    reseat_mod.reseat(worktree, Path(brief), model)
 
 
 @app.command(
     name="unclaim",
     help=(
         "Re-pool an Assignment with no record it was claimed: State=Ready, "
-        "Workflow=Submitted, Assignee cleared, no comment. The bobiverse-local "
+        "Workflow=Submitted, no comment. The bobiverse-local "
         "sibling of `vv resolve`/`vv return`; does not tear down the worktree."
     ),
 )
@@ -121,8 +125,12 @@ def spawn_launcher_command(
 )
 def spawn_command(
     assignment: Annotated[str, typer.Argument(help="Assignment id, e.g. BOB-26")],
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Model the spawned Bob runs on (default: opus)."),
+    ] = None,
 ) -> None:
-    orchestrate.spawn(assignment)
+    orchestrate.spawn(assignment, model)
 
 
 @app.command(
@@ -137,8 +145,12 @@ def spawn_command(
 )
 def bob_command(
     prefix: Annotated[str, typer.Argument(help="Component prefix (e.g. BOB)")],
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Model the ad-hoc Bob runs on (default: opus)."),
+    ] = None,
 ) -> None:
-    bob_mod.bob(prefix)
+    bob_mod.bob(prefix, model)
 
 
 @app.command(
@@ -180,17 +192,9 @@ def prime_command(
         typer.Argument(help="Component prefix (e.g. BOB). Omit to prime every Component."),
     ] = None,
 ) -> None:
-    data_files_root = data_dir()
-    projects_root = claude_projects.projects_root()
-    if prefix is not None:
-        prime_mod.main(prefix, data_files_root, projects_root)
-        return
-
-    prefixes = list_components()
-    if not prefixes:
-        print("No Components in ~/.vaudeville/projects.toml; nothing to prime.")
-        return
-    prime_mod.main_all(prefixes, data_files_root, projects_root)
+    prime_mod.prime_one_or_all(
+        prefix, data_files_root=data_dir(), projects_root=claude_projects.projects_root()
+    )
 
 
 @app.command(

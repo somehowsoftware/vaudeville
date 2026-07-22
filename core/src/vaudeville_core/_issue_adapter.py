@@ -11,13 +11,8 @@ from __future__ import annotations
 
 from typing import Any
 
-# YouTrack `fields` query value: id, summary, custom fields, linked issues
-# (with the resolved flag on their State), and the comment thread (text,
-# author display, creation stamp). The Assignment adapter in `queries.py`
-# passes this to `_youtrack.search` / `_youtrack.request` so the returned
-# dict matches what the accessors below assume.
 FIELDS = (
-    "idReadable,summary,description,"
+    "idReadable,summary,description,reporter(login),"
     "customFields(name,value(name,isResolved)),"
     "links(direction,linkType(name),"
     "issues(idReadable,customFields(name,value(name,isResolved)))),"
@@ -42,6 +37,20 @@ def state_resolved(issue: dict[str, Any]) -> bool:
 
 def signed_off(issue: dict[str, Any]) -> bool:
     return field_name(issue, "Signed off") == "Yes"
+
+
+def reporter_login(issue: dict[str, Any]) -> str:
+    reporter = issue.get("reporter") or {}
+    return str(reporter.get("login") or "")
+
+
+def authored_by_operator(issue: dict[str, Any], token_account: str) -> bool:
+    # Every agent-driven tracker write authenticates with one API token, so an
+    # agent-filed issue reports as that token's own account. A reporter absent or
+    # equal to it fails safe to False, so unknown authorship reads as agent-authored
+    # rather than being mistaken for the operator's.
+    reporter = reporter_login(issue)
+    return bool(reporter) and bool(token_account) and reporter != token_account
 
 
 def linked(issue: dict[str, Any], link_type: str, direction: str) -> list[dict[str, Any]]:

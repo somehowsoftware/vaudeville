@@ -128,7 +128,7 @@ Continue to Step 2.
 
 ### Step 2: Write the Synopsis
 
-Draft a comment for the Assignment. The comment MUST begin with the header `## Closeout Synopsis`; this allows a future agent to identify it programmatically among other discussion comments.
+Draft the synopsis body for the Assignment. Do not write the `## Closeout Synopsis` header yourself: Step 4's `vv resolve delivered` prepends it, and that is what lets a future agent identify the comment programmatically among other discussion comments.
 
 The synopsis answers three questions:
 
@@ -160,37 +160,58 @@ This is the agent's last opportunity to own the close narrative. Subsequent spaw
 
 ### Step 4: Bookkeep and identify unblocked peers
 
-Hand off the tracker side of the close, and collect the ids of peers this close just freed up:
+Three commands, each run on its own:
 
 ```bash
-vv resolve delivered <ASSIGNMENT> --reason "$SYNOPSIS" || { echo "resolve failed; aborting /onward before fanout" >&2; exit 1; }
-peers=$(vv unblocked <ASSIGNMENT>)
-awaiting=$(vv unblocked-sign-off <ASSIGNMENT>)
-printf '%s\n' "$peers"      # surface the captured spawn list to chat for recovery
-printf '%s\n' "$awaiting"   # surface the awaiting-sign-off list to chat
+vv resolve delivered <ASSIGNMENT> --reason "$(cat <<'SYNOPSIS'
+- Tracked the framing; dropped the `--strict` flag as unreachable.
+- `$HOME`-relative paths broke under the test runner; switched to absolute.
+- Downstream: PM-88 should reuse the fixture in `tests/conftest.py`.
+SYNOPSIS
+)"
 ```
 
-`vv resolve delivered` posts the `## Closeout Synopsis` comment and transitions State to `Delivered`; `vv unblocked` then prints the newly-pickable peer ids to stdout (one id per line, sorted, with no other chatter) and refuses only if the Assignment is somehow not resolved, which `vv resolve delivered` just guaranteed. The `|| exit 1` on the resolve is decisive: a failed bookkeeping must abort the close loudly, not fall through to a fanout that would then look empty. `$peers` carries the list into Step 5's loop; the `printf` ensures the same list reaches chat as a visible audit trail, since the recovery guidance later (in Tips) keys off "the printed ids." Neither command launches teardown; sequencing is this skill's job.
+```bash
+vv unblocked <ASSIGNMENT>
+```
 
-`vv unblocked-sign-off` captures the close's other freed peers: Commands and Manuals whose dependencies are now resolved but which the operator has not signed off. These are held out of the pool, so `vv unblocked` does not list them and the spawn loop never sees them; `$awaiting` carries them to Step 5's report for the operator's decision, not into the loop. Once signed off, such a peer is pickable like any other and `vv unblocked` lists it. The two queries are disjoint by construction (`$peers` is the pool, `$awaiting` is what waits on sign-off), so each freed peer reaches the loop at most once.
+```bash
+vv unblocked-sign-off <ASSIGNMENT>
+```
+
+The body is the synopsis you drafted in Step 2, typed in verbatim: a paraphrase written now is the version that lands, and Step 6 ends the only session that could tell the difference. It starts at your first line — `vv resolve` prepends the `## Closeout Synopsis` header itself.
+
+The quote marks in `<<'SYNOPSIS'` are the mechanism, not decoration. Under a bare `<<SYNOPSIS` the shell treats the body as a double-quoted string: your backticked command names run as commands and your `$` names expand to nothing, and that wreckage is what lands — on an Assignment now `Delivered` that nobody reads again.
+
+If `vv resolve delivered` fails, stop: do not run `vv unblocked`, do not spawn, do not tear down. Report it and leave the worktree standing. Failing quietly here is indistinguishable from succeeding — `vv unblocked` refuses an unresolved Assignment and prints no ids, which reads exactly like a close that freed nobody, and Step 6 would then destroy the evidence.
+
+`vv unblocked` prints the newly-pickable peer ids, one per line, sorted. `vv unblocked-sign-off` prints the close's other freed peers: Commands and Manuals whose dependencies are now resolved but which the operator has not signed off, so they are held out of the pool. Sign-off is exactly what separates the two lists, so no peer appears in both. The first is what Step 5 spawns; the second is only reported.
 
 ### Step 5: Spawn a Bob per unblocked peer
 
-For each `<peer>` id printed in Step 4, run `vv spawn` once per id, in a bash loop:
+Issue one `vv spawn` command per id that `vv unblocked` printed, each as its own separate call, reading the ids off Step 4's output.
+
+Separately, because each spawn is an irreversible act with its own outcome and this is the only pass anyone makes over it. Step 6 ends this session; the record of these calls is the record. Batch fifteen ids into one command and they share one exit status and one stream of stderr, so the peer that failed to spawn cannot be told from the fourteen that worked — and the graph reads closed while that successor never starts.
+
+Do not delegate the repetition to the shell. `/onward` runs under whatever shell the harness inherited from the host login shell, and Vaudeville does not specify one. On macOS it is zsh, which does not word-split an unquoted parameter expansion: a loop over a captured, newline-joined id list runs exactly once and hands `vv spawn` the whole blob as a single argument, which it rejects as a malformed id. Shell state does not survive between your Bash calls either, on any shell, so a list captured in one call is unset in the next.
 
 ```bash
-for peer in $peers; do
-  vv spawn "$peer" || continue
-done
+vv spawn BACKUP-9
 ```
 
-`vv spawn` is the canonical composed spawn: it preflights the peer, resets the managed clones, forks the peer Component's Foundation, pre-seeds the worktree's folder-trust, and runs `workmux add --background` in the peer's own target repo with the Bob's full agent command (auto-mode permissions, the scaffold env trio, Remote Control). Running it per peer is what makes the fanout cross-Component: each peer spawns into the repo its prefix names, not `/onward`'s repo.
+```bash
+vv spawn BACKUP-10
+```
 
-The `|| continue` is the fanout's fault tolerance, and it is essential under two `/onward` closes running concurrently on the same newly-unblocked peer. `vv spawn`'s internal preflight refuses a peer another close already claimed (Workflow `Claimed`, or State resolved), exiting non-zero so `continue` skips it and the loop proceeds. If both closes race past preflight before either Bob has claimed, `vv spawn`'s `workmux add` refuses the second on the canonical `<prefix>-<n>` worktree-name collision, also non-zero, also skipped. Either guard catches the race with no coordination, and stderr from each `vv spawn` surfaces directly to chat.
+`vv spawn` resolves each peer into the repo its prefix names, so a cross-Component fanout needs nothing extra from you; stay in this worktree.
 
-Post a one-line report per successfully-spawned peer (Assignment id and the `wm open <prefix>-N` command, where the worktree is `vv spawn`'s canonical `<lowercase-prefix>-<number>`, e.g. `pm-40`, no `bob-` prefix). If the unblocked list is empty, this step is a no-op.
+Every printed id leaves this step in one of two states: it has a Bob, or it is named in your chat report as unspawned with what went wrong. A failed spawn does not stop the fanout — go on to the next id — but the exit status alone will not tell you which state you are in: a peer another close already claimed and a peer whose fork broke both exit non-zero, and only one of them has a Bob. Read what the command said.
 
-Then, for each id in `$awaiting`, post a one-line report that the peer is dependency-unblocked but **not** spawned: a Command or Manual awaiting the operator's sign-off before it can enter the pool. Do not `vv spawn` it; the fanout acts only on `$peers`. If `$awaiting` is empty, this is a no-op.
+Post a one-line report per spawned peer: the Assignment id and the `wm open <prefix>-N` command, where the worktree is `vv spawn`'s canonical `<lowercase-prefix>-<number>` (e.g. `pm-40`, no `bob-` prefix).
+
+Then, for each id from `vv unblocked-sign-off`, post a one-line report that the peer is dependency-unblocked but **not** spawned: a Command or Manual awaiting the operator's sign-off before it can enter the pool. Do not spawn it.
+
+If either list was empty, its part of this step is a no-op.
 
 ### Step 6: Teardown
 
@@ -208,6 +229,6 @@ This archives the worktree and kills the pane. `vv teardown` writes nothing to t
 
 - **Concurrent closes are safe by construction.** Two `/onward` closes that both see the same newly-unblocked peer will both try to spawn on it. `vv spawn`'s internal preflight refuses claimed/resolved Assignments (Workflow `Claimed` or State `isResolved: true`), and its `workmux add` refuses a canonical-worktree-name collision. Either guard catches the race; you don't need to coordinate.
 
-- **Recovery from mid-flight interruption is manual.** `/onward` is not resumable. If Step 4 succeeded (Assignment is `Delivered`) but Step 5 was interrupted mid-loop, finish the spawns by hand from the printed ids (re-running `vv spawn` per remaining peer, or invoking `/spawn` once per peer) then run `/closeout none` to tear down. Do not re-run `/onward` on the same Assignment; re-running `vv resolve delivered` would duplicate the synopsis comment.
+- **Recovery from mid-flight interruption is manual.** `/onward` is not resumable. If Step 4 succeeded (Assignment is `Delivered`) but Step 5 was interrupted partway, finish the spawns from the ids `vv unblocked` printed (re-running `vv spawn` per remaining peer, or invoking `/spawn` once per peer) then run `/closeout none` to tear down. Do not re-run `/onward` on the same Assignment; re-running `vv resolve delivered` would duplicate the synopsis comment.
 
 - **Use `/closeout delivered` when you want to opt out.** A retroactive close (Step 1b) whose downstream peers were authored without this close in mind, or any close where the Bob wants to hand-pick what spawns, should use `/closeout delivered` directly.

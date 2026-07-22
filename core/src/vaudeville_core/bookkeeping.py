@@ -13,13 +13,10 @@ def field_updates(profile: ExitProfile) -> list[dict[str, object]]:
     workflow_value: dict[str, str] | None = (
         {"name": profile.workflow_name} if profile.workflow_name is not None else None
     )
-    fields: list[dict[str, object]] = [
+    return [
         {"name": "State", "$type": "StateIssueCustomField", "value": {"name": profile.state_name}},
         {"name": "Workflow", "$type": "SingleEnumIssueCustomField", "value": workflow_value},
     ]
-    if profile.unassign:
-        fields.append({"name": "Assignee", "$type": "SingleUserIssueCustomField", "value": None})
-    return fields
 
 
 def transition_request(assignment_id: str, profile: ExitProfile) -> Request:

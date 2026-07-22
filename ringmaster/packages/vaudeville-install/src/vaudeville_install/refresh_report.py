@@ -5,11 +5,16 @@ the flow (``operator_refresh``) and the composition root carry no message text.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from vaudeville_install.refresh import RefreshPlan
 
 
-def dry_run_report(plan: RefreshPlan) -> str:
-    synced = "Refresh would sync your config (project map, credentials, project-docs)."
+def dry_run_report(plan: RefreshPlan, config_dir: Path) -> str:
+    synced = (
+        f"Refresh would sync your config (project map, credentials, project-docs) from "
+        f"{config_dir}."
+    )
     if plan.reprime_needed:
         return f"{synced}\nIt would reprime the Foundations:\n{_reprime_reason(plan)}"
     return f"{synced}\nThe project docs and map are unchanged, so it would not reprime."
@@ -23,13 +28,14 @@ def reprime_prompt(plan: RefreshPlan) -> str:
     )
 
 
-def applied_report(plan: RefreshPlan) -> str:
+def applied_report(plan: RefreshPlan, config_dir: Path) -> str:
+    # The source leads. A sync from the wrong dir and a sync from the right one are the same run to
+    # an operator who is never told which one it read, and that indistinguishability is what let a
+    # host drift from its own config repo unnoticed.
+    synced = f"Synced your config from {config_dir}."
     if plan.reprime_needed:
-        return "Synced your config and reprimed the Foundations."
-    return (
-        "Synced your config. The project docs and map were unchanged, so the Foundations were "
-        "left as-is."
-    )
+        return f"{synced} Reprimed the Foundations."
+    return f"{synced} The project docs and map were unchanged, so the Foundations were left as-is."
 
 
 def _reprime_reason(plan: RefreshPlan) -> str:

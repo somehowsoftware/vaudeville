@@ -1,3 +1,0 @@
-[console_scripts]
-vaudeville-coordinator = vaudeville_coordinator.operator_cli:main
-vv-coordinator = vaudeville_coordinator.cli:main

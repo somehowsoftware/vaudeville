@@ -112,7 +112,7 @@ workmux send <name> "<text>"
 
 is the reliable keyboard stand-in. Claude Code's TUI does not reliably accept input
 from `tmux send-keys`; `workmux send` writes through cleanly. Use it for everything
-you would type, including slash commands: `workmux send <name> "/realize"`.
+you would type, including slash commands: `workmux send <name> "/tender"`.
 
 ### Read the transcript, not the pane
 

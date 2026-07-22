@@ -12,6 +12,7 @@ def serialize_sections(sections: Sequence[Section]) -> str:
             [
                 {
                     "source": section.source,
+                    "head": section.head,
                     "turns": [
                         {
                             "line": turn.line,
@@ -43,6 +44,7 @@ def deserialize_sections(stored: str) -> tuple[Section, ...]:
     return tuple(
         Section(
             source=str(entry["source"]),
+            head=str(entry["head"]) if entry.get("head") is not None else None,
             turns=tuple(
                 OperatorTurn(
                     line=int(turn["line"]),

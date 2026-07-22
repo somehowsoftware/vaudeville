@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: vaudeville-ringmaster
-Version: 2026.7.14.1
+Version: 2026.7.22.2
 Summary: Ringmaster component extracted from the vaudeville project.
 Requires-Python: >=3.14
 Requires-Dist: jinja2>=3

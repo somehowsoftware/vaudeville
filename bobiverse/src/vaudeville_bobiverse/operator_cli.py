@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
 import typer
-from vaudeville_core import component_from_name, list_components
+from vaudeville_core import component_from_name
 
 from vaudeville_bobiverse import bob as bob_mod
 from vaudeville_bobiverse import claude_projects
+from vaudeville_bobiverse import components as components_mod
 from vaudeville_bobiverse import enroll as enroll_mod
 from vaudeville_bobiverse import prime as prime_mod
+from vaudeville_bobiverse.config_origin import ConfigOriginUnrecorded, config_origin
 from vaudeville_bobiverse.data_dir import data_dir
 from vaudeville_bobiverse.spawn import orchestrate
 
-PRIME_USAGE_EXIT = 2
+USAGE_EXIT = 2
 SPAWN_FAILED_EXIT = 1
 
 app = typer.Typer(
@@ -32,38 +33,6 @@ def operator() -> None:
     ...
 
 
-def canonical_assignment_id(assignment: str) -> str:
-    # An Assignment id's namespace prefix is canonically uppercase, and `vv spawn`
-    # rejects any other case. The operator types the id in whatever case is to
-    # hand; canonicalizing here lets `vaudeville spawn bob-197` resolve the same
-    # Assignment as BOB-197 without widening the strict machine surface.
-    return assignment.upper()
-
-
-def spawn_each(assignment_ids: list[str], spawn_one: Callable[[str], None]) -> bool:
-    # Serial for legible per-id reporting, not for safety: each spawn cuts from an
-    # immutable base commit it resolves for itself, so concurrent spawns share no
-    # mutable state to race on. The downstream gates exit on failure without reliably
-    # naming the id, so this loop names it: on a SystemExit the gate's cause is already
-    # on stderr and only the exit code is left to add; an ordinary exception has not
-    # been printed at all.
-    any_failed = False
-    for assignment_id in assignment_ids:
-        try:
-            spawn_one(assignment_id)
-        except SystemExit as spawn_exit:
-            typer.echo(
-                f"Error spawning {assignment_id}: exited with status {spawn_exit.code}; "
-                "continuing with the rest.",
-                err=True,
-            )
-            any_failed = True
-        except Exception as error:
-            typer.echo(f"Error spawning {assignment_id}: {error}", err=True)
-            any_failed = True
-    return any_failed
-
-
 @app.command(
     name="spawn",
     help=(
@@ -76,8 +45,15 @@ def spawn_command(
     assignments: Annotated[
         list[str], typer.Argument(help="Assignment ids, e.g. BOB-197 BOB-198 (any case)")
     ],
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Model every spawned Bob runs on (default: opus)."),
+    ] = None,
 ) -> None:
-    if spawn_each([canonical_assignment_id(a) for a in assignments], orchestrate.spawn):
+    failures = orchestrate.spawn_each(assignments, model)
+    for failure in failures:
+        typer.echo(f"Error spawning {failure.assignment_id}: {failure.reason}", err=True)
+    if failures:
         raise typer.Exit(code=SPAWN_FAILED_EXIT)
 
 
@@ -86,13 +62,26 @@ def spawn_command(
     help=(
         "Fork an Assignment-less ad-hoc Bob into a Component's primed "
         "Foundation. Accepts the Component's long or short name and "
-        "resolves it to a prefix."
+        "resolves it to a prefix. A bare `bob` with no name is an error that "
+        "lists the known names."
     ),
 )
 def bob_command(
-    component: Annotated[str, typer.Argument(help="Component name, e.g. bobiverse or bob")],
+    component: Annotated[
+        str | None, typer.Argument(help="Component name, e.g. bobiverse or bob")
+    ] = None,
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Model the ad-hoc Bob runs on (default: opus)."),
+    ] = None,
 ) -> None:
-    bob_mod.bob(component_from_name(component))
+    if component is None:
+        typer.echo(
+            components_mod.bare_bob_rejection(components_mod.registered_component_names()),
+            err=True,
+        )
+        raise typer.Exit(code=USAGE_EXIT)
+    bob_mod.bob(component_from_name(component), model)
 
 
 def prime_rejection(component: str | None, every: bool) -> str | None:
@@ -125,11 +114,11 @@ def prime_command(
     rejection = prime_rejection(component, every)
     if rejection is not None:
         typer.echo(rejection, err=True)
-        raise typer.Exit(code=PRIME_USAGE_EXIT)
-    if component is not None:
-        prime_mod.main(component_from_name(component), data_dir(), claude_projects.projects_root())
-        return
-    prime_mod.main_all(list_components(), data_dir(), claude_projects.projects_root())
+        raise typer.Exit(code=USAGE_EXIT)
+    prefix = component_from_name(component) if component is not None else None
+    prime_mod.prime_one_or_all(
+        prefix, data_files_root=data_dir(), projects_root=claude_projects.projects_root()
+    )
 
 
 @app.command(
@@ -165,7 +154,20 @@ def enroll_command(
         str | None,
         typer.Option("--description", help="Optional one-sentence Component summary."),
     ] = None,
+    config_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--config-dir",
+            help="The tenant's config repo, holding the register enroll writes to."
+            " Defaults to the config dir this host was installed from.",
+        ),
+    ] = None,
 ) -> None:
+    try:
+        authored_config_dir = config_origin(config_dir)
+    except ConfigOriginUnrecorded as unrecorded:
+        typer.echo(str(unrecorded), err=True)
+        raise typer.Exit(code=USAGE_EXIT) from unrecorded
     enroll_mod.enroll(
         prefix.upper(),
         repo_path=repo_path,
@@ -174,7 +176,7 @@ def enroll_command(
         remote=remote,
         short_name=short_name,
         description=description,
-        host_config_dir=data_dir(),
+        authored_config_dir=authored_config_dir,
     )
 
 

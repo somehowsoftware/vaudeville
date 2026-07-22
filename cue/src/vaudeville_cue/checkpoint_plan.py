@@ -8,6 +8,7 @@ from vaudeville_cue.checkpoint_layout import CheckpointLayout
 from vaudeville_cue.digest import Section, render
 from vaudeville_cue.digest_store import serialize_sections
 from vaudeville_cue.resume_brief import resume_brief
+from vaudeville_cue.runaway import has_run_away
 
 SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 
@@ -36,20 +37,12 @@ class CheckpointPlan:
 
 
 def plan_checkpoint(
-    continuation: str | None,
     carryover: str,
     sections: tuple[Section, ...] | None,
     *,
-    deployed_skills: frozenset[str] | set[str],
     layout: CheckpointLayout,
     pane: str,
 ) -> CheckpointRefusal | CheckpointPlan:
-    if continuation is not None and continuation not in deployed_skills:
-        return CheckpointRefusal(
-            f"continuation skill /{continuation} is not deployed; reseating now would strand "
-            "this Bob in a fresh session whose Resume Brief names a skill that won't resolve. "
-            "Redeploy the scaffold so the skill resolves, then retry."
-        )
     if sections is None:
         return CheckpointRefusal(TRANSCRIPT_UNRESOLVED)
     if not carryover.strip():
@@ -61,7 +54,10 @@ def plan_checkpoint(
         writes=(
             (layout.digest, serialize_sections(sections)),
             (layout.carryover, carryover),
-            (layout.resume_brief, resume_brief(render(sections), carryover, continuation)),
+            (
+                layout.resume_brief,
+                resume_brief(render(sections), carryover, surface_and_wait=has_run_away(sections)),
+            ),
         ),
         # The detached handoff is bobiverse's `reseat` primitive: it replaces the
         # Bob's pane session in place, seeding the fresh session with the Resume Brief as

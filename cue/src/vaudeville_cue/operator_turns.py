@@ -63,17 +63,50 @@ def relayed_operator_turns(messages: Sequence[Message]) -> list[OperatorTurn]:
 
 
 def unconfirmed_queued_messages(
-    operations: Sequence[QueueOperation], turns: Sequence[OperatorTurn]
+    operations: Sequence[QueueOperation], messages: Sequence[Message]
 ) -> list[UnconfirmedQueuedMessage]:
+    this_bobs_first_turn = first_turn_line(messages)
+    delivered = _delivered_turn_texts(messages)
     kept: list[UnconfirmedQueuedMessage] = []
     for operation in _queued_operator_drafts(operations):
+        # A forked session inherits the Foundation's transcript, queue operations included;
+        # anything before this Bob's own first turn is Foundation-era, never a loss of its
+        # operator content.
+        if this_bobs_first_turn is not None and operation.line < this_bobs_first_turn:
+            continue
         content = (operation.content or "").strip()
-        if _already_a_turn(content, turns):
+        # Content the harness delivered as a real user turn discharged the draft; it was
+        # never lost, whatever the enqueue/remove trail around it looks like.
+        if content in delivered:
             continue
         if kept and kept[-1].text == content:
             continue
         kept.append(UnconfirmedQueuedMessage(operation.line, operation.timestamp, content))
     return kept
+
+
+def first_turn_line(messages: Sequence[Message]) -> int | None:
+    # This Bob's own first turn is its Brief (the spawn Brief when forked, the Resume Brief
+    # when reseated), injected as an operator-sourced ("typed"/"queued") turn — unlike an
+    # operator turn, the Resume Brief counts, because it is the reseat's first turn. Priming
+    # reaches a Foundation under a non-operator source, so the first operator-sourced record
+    # is where inherited priming ends and this Bob's turns begin.
+    for message in messages:
+        if (
+            message.role == "user"
+            and message.prompt_source in _OPERATOR_PROMPT_SOURCES
+            and message.spoken_text
+        ):
+            return message.line
+    return None
+
+
+def _delivered_turn_texts(messages: Sequence[Message]) -> set[str]:
+    return {
+        message.spoken_text
+        for message in messages
+        if message.role == "user" and message.spoken_text
+    }
 
 
 def _queued_operator_drafts(operations: Sequence[QueueOperation]) -> list[QueueOperation]:
@@ -115,10 +148,6 @@ def _left_the_queue_between(
         operation.operation in {"remove", "dequeue"} and after_line < operation.line < before_line
         for operation in operations
     )
-
-
-def _already_a_turn(content: str, turns: Sequence[OperatorTurn]) -> bool:
-    return any(turn.text == content for turn in turns)
 
 
 def _operator_spoke(message: Message) -> bool:

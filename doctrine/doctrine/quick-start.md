@@ -131,7 +131,7 @@ Both `vv` and `vaudeville` now resolve from `~/.local/bin`; make sure that direc
 
 ## First work
 
-Your entire shell surface is one command, `vaudeville`, with five verbs — `bob`, `pickable`, `prime`, `spawn`, and `enroll`. Everything else you do happens inside an agent conversation, through skills you invoke with `/`. You never type `vv`: that is the agents' own 34-verb facade, [Component](vocabulary.md#component)-scoped, driven by the skills and the machinery on your behalf. Run the loop end to end once:
+Your entire shell surface is one command, `vaudeville`, with seven verbs — `bob`, `enroll`, `pickable`, `prime`, `refresh`, `spawn`, and `update`. Everything else you do happens inside an agent conversation, through skills you invoke with `/`. You never type `vv`: that is the agents' own 34-verb facade, [Component](vocabulary.md#component)-scoped, driven by the skills and the machinery on your behalf. Run the loop end to end once:
 
 1. **Open a working conversation.**
 
@@ -153,7 +153,7 @@ Your entire shell surface is one command, `vaudeville`, with five verbs — `bob
 
    This cuts a worktree and seeds a fresh Bob, which claims the Assignment on its first turn and works it. (Inside a conversation, the `/spawn` skill does the same.)
 
-5. **Converge the PR.** The working Bob runs the `/parlay` skill to drive its PR to green — review comments, CI, merge conflicts — surfacing to you only where your judgment is wanted.
+5. **Receive the tender.** The working Bob carries its finished work to a pull request through the `/tender` skill — local CI, push, PR, a bounded watch on that PR's CI — and reports the PR with its CI verdict to you. Changes you ask for land as new commits on the same PR.
 
 6. **Merge.** Merging is yours: review the PR and merge when satisfied. Agents never merge to main. (A [Track](vocabulary.md#track) member's PR targets the Track's branch instead, and the Track's integration into main is its own deliberate, check-in-triggered event.)
 
@@ -164,12 +164,12 @@ Your entire shell surface is one command, `vaudeville`, with five verbs — `bob
 Once installed, wiring an existing repository into your tenant as a [Component](vocabulary.md#component) is one verb:
 
 ```
-vaudeville enroll <PREFIX> --repo-path <path> --name "<long name>" --kind context|resource
+vaudeville enroll <PREFIX> --repo-path <path> --config-dir <config repo checkout> --name "<long name>" --kind context|resource
 ```
 
-It provisions the Component's tracker, registers it in `vaudeville.toml`, and scaffolds its documentary skeleton — into a repository you already built. It never creates that repository, or its CI, branch protection, or review rules: those are the tenant's, outside anything Vaudeville touches. A [Context](vocabulary.md#context), which adjudicates a domain of its own, is scaffolded with a stub `docs/spec.md` and `docs/vocabulary.md`; a [Resource](vocabulary.md#resource), which holds no domain, gets neither. That spec and vocabulary — primed into a [Foundation](vocabulary.md#foundation), and pointedly not a `CLAUDE.md` — are how a Vaudeville Component carries the meaning its Bobs work from, and the scaffold lays that shape down where the first Bob will look for it.
+It provisions the Component's tracker, registers it in your config repo's `vaudeville.toml`, and scaffolds its documentary skeleton — into a repository you already built. It never creates that repository, or its CI, branch protection, or review rules: those are the tenant's, outside anything Vaudeville touches. A [Context](vocabulary.md#context), which adjudicates a domain of its own, is scaffolded with a stub `docs/spec.md` and `docs/vocabulary.md`; a [Resource](vocabulary.md#resource), which holds no domain, gets neither. That spec and vocabulary — primed into a [Foundation](vocabulary.md#foundation), and pointedly not a `CLAUDE.md` — are how a Vaudeville Component carries the meaning its Bobs work from, and the scaffold lays that shape down where the first Bob will look for it.
 
-`enroll` does not build the Foundation. A Bob sources its Component from the published remote, so a skeleton you have not pushed is invisible to it: commit and push the scaffold, then run `vaudeville prime <PREFIX>`.
+`enroll` does not build the Foundation. A Bob sources its Component from the published remote, so a skeleton you have not pushed is invisible to it: commit and push both, the scaffold in the enrolled repo and the registration in your config repo. Then `vaudeville refresh` copies your config repo's `vaudeville.toml` over `~/.vaudeville/vaudeville.toml` and builds the new Component's Foundation.
 
 ## Daily operation
 
@@ -179,17 +179,19 @@ It provisions the Component's tracker, registers it in `vaudeville.toml`, and sc
 | See what's ready to pick up across all Components | `vaudeville pickable` |
 | Spawn a Bob on an Assignment | `vaudeville spawn <ASSIGNMENT>` |
 | Stand up a new Component from an existing repo | `vaudeville enroll <PREFIX> …` — see [Standing up a Component](#standing-up-a-component) |
-| Re-prime after doctrine or config changes | `vaudeville prime <Component>` (or `--all` for every Component) |
-| File · sign off · converge · close | in a conversation: `/premise`·`/direction`·`/command`·`/manual` · `/sign-off` · `/parlay` · `/closeout`·`/onward` |
+| Carry an edit to your config repo onto this host | `vaudeville refresh` — it rebuilds Foundations too, when the register or your project docs moved |
+| Rebuild a Foundation after a Component's own spec or vocabulary moved | `vaudeville prime <Component>` (or `--all` for every Component) |
+| Take the newest framework Release, doctrine included | `vaudeville update` |
+| File · sign off · tender · close | in a conversation: `/premise`·`/direction`·`/command`·`/manual` · `/sign-off` · `/tender` · `/closeout`·`/onward` |
 
-That table is the whole of your shell: five `vaudeville` verbs, and the rest done by talking to agents. If you find yourself reaching for `vv` at a prompt, you have stepped onto the agents' surface, not yours.
+That table is the whole of your shell: seven `vaudeville` verbs, and the rest done by talking to agents. If you find yourself reaching for `vv` at a prompt, you have stepped onto the agents' surface, not yours.
 
 Two moves live inside a Bob's own conversation rather than at your shell, invoked as skills when a session outgrows or completes its work:
 
 - `/checkpoint` — shed an oversized conversation in place and resume the same work in a fresh one.
 - `/closeout` — archive the worktree and end the Bob once its Assignment resolves.
 
-`vaudeville prime` rebuilds a Component's [Foundation](vocabulary.md#foundation) so that every Bob forked afterward carries the change; re-prime whenever doctrine or config changes.
+`vaudeville prime` rebuilds a Component's [Foundation](vocabulary.md#foundation) so that every Bob forked afterward carries the change; reach for it when a Component's own spec or vocabulary moved. An edit to your config repo is `refresh`'s to carry, not `prime`'s: `prime` reads the map this host already holds, so a Component registered only in your config repo is one `prime` cannot see. Doctrine travels with the framework itself, and `vaudeville update` is what brings it.
 
 ## A day in the operator's chair
 

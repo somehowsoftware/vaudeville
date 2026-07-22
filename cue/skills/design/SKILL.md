@@ -6,22 +6,23 @@ description: >
   `/panel` on the clean approach, then surface a committed design across three
   axes: the new or defective domain terms, how the work should interact with
   existing code (including the refactors a clean design needs), and the
-  domain-derived contracts the tests must keep. The full-process procedure runs
-  it as a matter of course; it also runs standalone. Writes no durable doc.
+  domain-derived contracts the tests must keep. Run it when the work carries a
+  design still unsettled — a term to work out, a contract to pin, a flow to
+  shape — a judgment made fresh per piece of work. Writes no durable doc.
 ---
 
 # Design
 
-A design pass for the Bob lifecycle, run **after you and the operator have agreed what to build** and **before implementation**. It moves domain-design thinking ahead of implementation, so the clean approach is decided up front rather than discovered through review after the code is written. The pass consults `/panel` to sharpen the Bob across five outside lenses and runs a [prerequisite screen](prerequisite-screen.md) beside the consult, then has the Bob commit to a design along three axes and surface it to the operator. That committed design is what the implementation body then builds.
+A design pass, run **after you and the operator have agreed what to build** and **before implementation**. It moves domain-design thinking ahead of implementation, so the clean approach is decided up front rather than discovered through review after the code is written. The pass consults `/panel` to sharpen the Bob across five outside lenses and runs a [prerequisite screen](prerequisite-screen.md) beside the consult, then has the Bob commit to a design along three axes and surface it to the operator. That committed design is the plan the implementation arrives with.
 
-Whether Design runs is not the operator's opt-in but a property of the procedure the [router](../realize/SKILL.md) selected. [full-process](../_full_process/SKILL.md) invokes `/design` as a matter of course: folding it in removes the discretion to skip, a blind spot the agent is systematically overconfident about and that exhortation does not fix. A lighter procedure may omit it. And `/design` stays a public skill in its own right: reach for it standalone when a clean approach is worth getting right before code.
+Whether Design runs is a judgment made fresh per piece of work, not per assignment: run the pass when the piece you are about to build carries a design still unsettled — a term to work out, a contract to pin, a flow to shape — and skip it when the approach is already settled. An assignment can hold pieces of both kinds; the judgment belongs to the piece, made at the moment you are about to build it.
 
-**When to use:** the goal is settled (you and the operator know *what* the work is and that it serves the bigger picture) and the *how* is non-trivial. Inside full-process it runs automatically; standalone, run it in the same Bob that will realize the work, so the design it produces is the plan the implementation arrives with.
+**When to use:** the goal is settled (you and the operator know *what* the work is and that it serves the bigger picture) and the *how* is non-trivial. Run it in the session that will build the work: the design lives in the conversation, so the builder must be the one who holds it.
 
 **When not to use:**
 
 - To decide *whether* or *what* to build. That is the conversation before `/design`; this pass assumes the goal is agreed.
-- As a standalone heavyweight pass over work that is not heading into a realization. A procedure that should omit Design omits it by not invoking it; building the smallest thing that serves the goal cuts against forcing a full pass where the procedure did not call for one.
+- Over work that carries nothing unsettled. The pass exists to close open design; run over an approach that is already decided, it can only re-derive the decision, and building the smallest thing that serves the goal cuts against that ceremony.
 
 ## The three axes
 
@@ -61,12 +62,9 @@ If the pass surfaces a new or defective term, this is where the vocabulary grows
 
 ### 5. Surface the committed design
 
-Surface the committed design, tight, organized as the three axes: the residue of the pass, distilled rather than dumped. `/design` itself does not implement, and it does not decide what happens next: whether to stop here is the **caller's** call, not this skill's.
-
-- **Standalone** (run by hand, ahead of any procedure): surface to the operator and stop. The design lives in this conversation; the operator decides when to realize it.
-- **Invoked by a procedure**: emit the committed design into the conversation and keep going in the same turn. This is not a decision point and it waits for no reply: the procedure's next step checkpoints, and the committed design crosses the clear as the Carryover. Stopping during an autonomous procedure breaks flow and is unnecessary; the operator has already pre-approved the agent's decision by starting an autonomous run.
+Surface the committed design, tight, organized as the three axes: the residue of the pass, distilled rather than dumped. `/design` itself does not implement. The committed design lives in this conversation: implementation picks it up from here, and when a Checkpoint genuinely intervenes before the building is done, the design crosses the reseat as Carryover — it is exactly the kind of thing only the conversation built. What happens next — building now, or the operator weighing in first — is the conversation's own next move, not this skill's to fix.
 
 ## Non-goals
 
-- **Does not write a durable design document.** The deliverable is the committed design in this conversation, which the implementation body inherits across the Checkpoint as the Carryover, not a file in the repo. A persistent design note whose purpose is to preserve a past decision is the decision-record / ADR anti-pattern the intent doctrine rules out; the *why* survives in the conversation, the PR, and the commit, not in a doc that rots as the code drifts.
+- **Does not write a durable design document.** The deliverable is the committed design in this conversation, not a file in the repo. A persistent design note whose purpose is to preserve a past decision is the decision-record / ADR anti-pattern the intent doctrine rules out; the *why* survives in the conversation, the PR, and the commit, not in a doc that rots as the code drifts.
 - **Does not re-implement `/panel`.** It calls the shipped skill; tuning a cast is a PR against `/panel`, not a bespoke consult here.

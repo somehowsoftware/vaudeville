@@ -17,7 +17,7 @@ state "Authored\n(in pickup pool)"      as authored
 state "Spawned\n(substrate allocated)"  as spawned
 state "Claimed\n(claim complete)"       as claimed
 state "Working"                         as working
-state "Materialized\n(parlay watching)" as materialized
+state "Materialized\n(PR open)"         as materialized
 state "Delivered"                       as delivered <<terminal>>
 state "Returned"                        as returned  <<terminal>>
 state "Abandoned"                       as abandoned <<terminal>>
@@ -27,7 +27,7 @@ state "Onward fanout"                   as onward
 authored     --> spawned      : ""/spawn""\n(or ""/delegate"")
 spawned      --> claimed      : ""vv assignment-claim""\n(first-turn body)
 claimed      --> working      : Bob begins\nthe Route's work
-working      --> materialized : ""/realize""
+working      --> materialized : ""/tender""
 materialized --> delivered    : ""/closeout delivered""\n(PR merged)
 working      --> returned     : ""/closeout returned""\n(stopped partway)
 working      --> abandoned    : ""/closeout abandoned""\n(Assignment obsolete)

@@ -5,6 +5,7 @@ src/vaudeville_install/artifact_completeness.py
 src/vaudeville_install/child_process.py
 src/vaudeville_install/cli.py
 src/vaudeville_install/commissioning.py
+src/vaudeville_install/config_origin.py
 src/vaudeville_install/data_file_ledger.py
 src/vaudeville_install/destination.py
 src/vaudeville_install/doc_tree.py

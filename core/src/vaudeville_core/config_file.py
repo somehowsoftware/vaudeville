@@ -52,6 +52,7 @@ class _ProjectEntry(BaseModel):
     short_name: str | None = None
     description: str | None = None
     remote: str | None = None
+    code_review: bool = True
 
 
 class _Downstream(BaseModel):
@@ -90,6 +91,7 @@ def _config_from_toml(raw: dict[str, Any]) -> VaudevilleConfig:
             remote=entry.remote,
             name=entry.name,
             short_name=entry.short_name,
+            code_review=entry.code_review,
         )
         for prefix, entry in parsed.projects.items()
     }
@@ -202,28 +204,26 @@ def component_from_name(name: str, *, host_config_dir: Path | None = None) -> st
     return matching[0]
 
 
-def register_component(component: Component, *, host_config_dir: Path | None = None) -> None:
-    canonical = _canonical(component)
-    already = component_for_prefix(load_config(host_config_dir), canonical.prefix)
-    if already == canonical:
+def register_component(component: Component, *, authored_config_dir: Path) -> None:
+    register = authored_config_dir / VAUDEVILLE_FILENAME
+    as_the_register_reads_it_back = replace(
+        component, repo_path=_canonical_repo_path(component.repo_path)
+    )
+    already = component_for_prefix(load_config(authored_config_dir), component.prefix)
+    if already == as_the_register_reads_it_back:
         return
-    path = host_config_path(VAUDEVILLE_FILENAME, host_config_dir)
     if already is not None:
         _abort(
-            f"{path}: Component prefix {canonical.prefix!r} is already registered with "
+            f"{register}: Component prefix {component.prefix!r} is already registered with "
             f"different coordinates. Refusing to overwrite; edit the entry by hand to change it."
         )
-    if not is_component_prefix(canonical.prefix):
+    if not is_component_prefix(component.prefix):
         _abort(
-            f"{path}: Component prefix {canonical.prefix!r} is not a valid Component prefix "
+            f"{register}: Component prefix {component.prefix!r} is not a valid Component prefix "
             f"(uppercase letters only); its assignment ids could not be read back. Fix the "
             f"prefix and register again."
         )
-    _splice_entry(path, _project_table(canonical))
-
-
-def _canonical(component: Component) -> Component:
-    return replace(component, repo_path=_canonical_repo_path(component.repo_path))
+    _splice_entry(register, _project_table(component))
 
 
 _TOML_ESCAPES = {
@@ -265,6 +265,7 @@ def _project_table(component: Component) -> str:
             for key, value in optional.items()
             if value is not None
         ),
+        *([] if component.code_review else ["code_review = false"]),
     ]
     return "\n".join(lines)
 

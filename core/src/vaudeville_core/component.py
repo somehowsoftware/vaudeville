@@ -27,6 +27,14 @@ class Component:
     be. Optional: a Component read only from its local clone need not
     carry one, and a Fresh clone of such a Component aborts at the point of
     need rather than the register failing to load.
+
+    `code_review` is the tenant's declaration of whether a reviewer reviews
+    this Component's pull requests at all. Whether a review app is installed
+    on a repository is not readable under the token Vaudeville runs on, so
+    the register carries the answer rather than any Context inferring it from
+    silence. The register only states the fact; what a consumer does with it
+    is the consumer's. Defaults true wherever the key is absent, so a tenant
+    that never sets it is treated as reviewed.
     """
 
     prefix: str
@@ -36,6 +44,7 @@ class Component:
     remote: str | None
     name: str
     short_name: str | None
+    code_review: bool
 
 
 @dataclass(frozen=True)
@@ -55,6 +64,7 @@ def make_component(
     remote: str | None = None,
     name: str = "",
     short_name: str | None = None,
+    code_review: bool = True,
 ) -> Component:
     return Component(
         prefix=prefix,
@@ -64,6 +74,7 @@ def make_component(
         remote=remote,
         name=name,
         short_name=short_name,
+        code_review=code_review,
     )
 
 

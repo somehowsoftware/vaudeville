@@ -2,7 +2,7 @@
 
 *This is a UL doc: terms defined in relation to one another. For framework-level UL see `~/.vaudeville/doctrine/vocabulary.md`.*
 
-The verbs and state nouns Bobiverse uses internally for the **inter-session** lifecycle: what happens around a Bob. The **intra-session** verbs a running Bob applies to its own work (Checkpoint, Materialize, Parlay, Design, Winnow, Spike) and their artifacts now live in vaudeville-cue's vocabulary, not here. Cross-context terms (**Bob**, **Assignment**, **Route**, **Foundation**, **Brief**, **Component**) are linked to the framework vocabulary, not redefined.
+The verbs and state nouns Bobiverse uses internally for the **inter-session** lifecycle: what happens around a Bob. The **intra-session** verbs a running Bob applies to its own work (Checkpoint, Tender, Design, Winnow, Spike) and their artifacts now live in vaudeville-cue's vocabulary, not here. Cross-context terms (**Bob**, **Assignment**, **Route**, **Foundation**, **Brief**, **Component**) are linked to the framework vocabulary, not redefined.
 
 ## Verbs
 
@@ -52,7 +52,7 @@ The substrate atom every Closeout kind ends in (`vv teardown`): archive the work
 
 ### Unclaim
 
-The Bobiverse-local transition atom (`vv unclaim`) that returns an Assignment to the pickup pool with its assignee cleared and no comment, so it looks as it did before the Bob ever touched it. The kernel terminations (delivered, abandoned, returned) are PM's; unclaim is bobiverse's because "the Bob had no right to exist" is a word about the Bob's relationship to the Assignment, not the Assignment's deliverable state. Reserved for the procedural-mistake case where teardown is the intent. Distinct from `returned` (a real attempt that stopped partway) and from `abandoned` (a judgment that the Assignment should not exist anymore).
+The Bobiverse-local transition atom (`vv unclaim`) that returns an Assignment to the pickup pool with no comment, so it looks as it did before the Bob ever touched it. The kernel terminations (delivered, abandoned, returned) are PM's; unclaim is bobiverse's because "the Bob had no right to exist" is a word about the Bob's relationship to the Assignment, not the Assignment's deliverable state. Reserved for the procedural-mistake case where teardown is the intent. Distinct from `returned` (a real attempt that stopped partway) and from `abandoned` (a judgment that the Assignment should not exist anymore).
 
 ### None
 
@@ -70,7 +70,7 @@ The Bob aggregate transitions through four observable states:
 
 - **Spawned**: the Bob exists; no Assignment Claimed yet.
 - **Claimed**: the Bob has taken responsibility for an Assignment. The verb lives in vaudeville-pm.
-- **Materialized**: PR open; the Bob is running cue's Parlay loop over it.
+- **Materialized**: PR open; the Bob has tendered it and awaits the operator's merge.
 - **Closed**: the Bob is gone. Terminal; the kind of [Closeout](#closeout) determines what tracker state the Assignment was left in.
 
 ## Collaborators
