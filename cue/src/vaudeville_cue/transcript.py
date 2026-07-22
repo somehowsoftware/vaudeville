@@ -91,6 +91,29 @@ def queue_operations_from_transcript_lines(lines: Iterable[str]) -> list[QueueOp
     return operations
 
 
+_SYNTHETIC_MODEL = "<synthetic>"
+
+
+def current_model_from_transcript_lines(lines: Iterable[str]) -> str | None:
+    current: str | None = None
+    for line in lines:
+        record = _record(line)
+        if record is None or record.get("type") != "assistant" or record.get("isSidechain"):
+            # A sidechain record is a subagent's turn; its model is the tool's, not the
+            # model the operator is running the session on.
+            continue
+        message = record.get("message")
+        if not isinstance(message, dict):
+            continue
+        model = message.get("model")
+        # A synthetic assistant record (an interrupt, an injected error placeholder) carries
+        # "<synthetic>" where a model id would be, not a model to reseat onto. The current
+        # model is the newest real one: the operator may switch models mid-session.
+        if isinstance(model, str) and model and model != _SYNTHETIC_MODEL:
+            current = model
+    return current
+
+
 def _record(line: str) -> dict[str, object] | None:
     stripped = line.strip()
     if not stripped:

@@ -83,8 +83,16 @@ def checkpoint_command(
         str | None,
         typer.Option(help="Worktree whose pane to drive (default: the one cwd is inside)."),
     ] = None,
+    model: Annotated[
+        str | None,
+        typer.Option(
+            "--model",
+            help="Model the reseated session runs on, overriding the running model "
+            "detected from the transcript. Omit to preserve the current model.",
+        ),
+    ] = None,
 ) -> None:
-    run_checkpoint(worktree_name, carryover=sys.stdin.read())
+    run_checkpoint(worktree_name, carryover=sys.stdin.read(), model=model)
 
 
 def main() -> None:

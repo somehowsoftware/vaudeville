@@ -20,6 +20,7 @@ from vaudeville_cue.digest import Section, accumulate, render
 from vaudeville_cue.digest_store import deserialize_sections
 from vaudeville_cue.operator_turns import operator_turns, unconfirmed_queued_messages
 from vaudeville_cue.transcript import (
+    current_model_from_transcript_lines,
     messages_from_transcript_lines,
     queue_operations_from_transcript_lines,
 )
@@ -44,6 +45,22 @@ def digest_sections(
         _prior_sections(prior_store),
         Section(str(transcript), tuple(turns), tuple(remnants), head=head),
     )
+
+
+def current_model(transcript_dir: Path, session_id: str | None) -> str | None:
+    if not session_id:
+        return None
+    transcript = transcript_dir / f"{session_id}.jsonl"
+    if not transcript.is_file():
+        return None
+    lines = transcript.read_text(encoding="utf-8").split("\n")
+    return current_model_from_transcript_lines(lines)
+
+
+def reseat_model(transcript_dir: Path, session_id: str | None, override: str | None) -> str | None:
+    # A None result (no override, no readable current model) lets the reseat fall back to
+    # bobiverse's own launch default rather than cue guessing a model wrong.
+    return override or current_model(transcript_dir, session_id)
 
 
 def _current_head(worktree_root: Path) -> str | None:
@@ -93,18 +110,17 @@ def run_digest() -> None:
     print(render(sections), end="")
 
 
-def run_checkpoint(worktree_name: str | None, carryover: str) -> None:
+def run_checkpoint(worktree_name: str | None, carryover: str, model: str | None) -> None:
     worktree_root, layout, transcript_dir = _checkpoint_locations()
+    session_id = os.environ.get(SESSION_ID_ENV)
     outcome = plan_checkpoint(
         carryover,
         digest_sections(
-            transcript_dir,
-            os.environ.get(SESSION_ID_ENV),
-            _current_head(worktree_root),
-            prior_store=layout.digest,
+            transcript_dir, session_id, _current_head(worktree_root), prior_store=layout.digest
         ),
         layout=layout,
         pane=worktree_name or worktree_root.name,
+        model=reseat_model(transcript_dir, session_id, model),
     )
     if isinstance(outcome, CheckpointRefusal):
         print(f"Error: {outcome.message}", file=sys.stderr)

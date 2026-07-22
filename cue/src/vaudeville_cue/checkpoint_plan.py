@@ -42,6 +42,7 @@ def plan_checkpoint(
     *,
     layout: CheckpointLayout,
     pane: str,
+    model: str | None = None,
 ) -> CheckpointRefusal | CheckpointPlan:
     if sections is None:
         return CheckpointRefusal(TRANSCRIPT_UNRESOLVED)
@@ -62,9 +63,10 @@ def plan_checkpoint(
         # The detached handoff is bobiverse's `reseat` primitive: it replaces the
         # Bob's pane session in place, seeding the fresh session with the Resume Brief as
         # its born-grounded first turn. The session is replaced in one act, with nothing
-        # to detect or observe. cue passes only the pane and the brief path; the launch
-        # knowledge (model, remote-control, autonomy, the foundation it drops) is
-        # bobiverse's alone. Re-invoke the running entry point (sys.argv[0]), not
+        # to detect or observe. cue passes the pane, the brief path, and the resolved model;
+        # the rest of the launch knowledge (remote-control, autonomy, the foundation it drops,
+        # the default when cue resolves no model) is bobiverse's alone. Re-invoke the running
+        # entry point (sys.argv[0]), not
         # `python -m`: a fresh `-m` child misses the shiv zipapp's bootstrap and dies
         # before reseating; sys.argv[0] resolves the assembled `vv` facade the way the
         # running command did, and the facade carries the verb.
@@ -74,6 +76,7 @@ def plan_checkpoint(
             _RESEAT_VERB,
             pane,
             str(layout.resume_brief),
+            *(("--model", model) if model else ()),
         ),
         reseat_log=layout.reseat_log,
     )

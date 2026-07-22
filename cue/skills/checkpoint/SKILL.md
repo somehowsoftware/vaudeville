@@ -43,6 +43,8 @@ vv checkpoint <<'CARRYOVER'
 CARRYOVER
 ```
 
+`vv checkpoint` carries the model this session is running on into the reseated one, so you never read or pass that model yourself. Add `--model <model>` only when the operator named a different model for the resumed work (any alias or id `claude` takes).
+
 Before anything irreversible happens, `vv checkpoint` refuses (and you fix and retry) if the Carryover is empty or this session's transcript cannot be resolved. Otherwise it persists the Digest and the Carryover, composes the Resume Brief from them, and launches the detached reseat.
 
 **This command is where the skill ends. Running it hands control to an external process (a detached reseat, outside this conversation) that performs everything that remains, on its own:** it replaces this pane's session in place with a fresh one born holding the Resume Brief (the Digest, the Carryover, and the instruction for what comes next) as its first turn. The replacement and the grounding are the reseat's to deliver and a freshly-reseated agent's to carry out. None of it is yours, and there is nothing for you to wait for.
